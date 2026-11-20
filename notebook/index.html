@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f121a">
+<title>Notebook</title>
+<link rel="manifest" href="manifest.webmanifest" data-per-accent>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" data-per-accent>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Notebook">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css?v=30370fd5">
+</head>
+<body>
+
+<div class="gate" id="bootScreen"><div class="hint">Loading…</div></div>
+
+<div class="gate" id="setupScreen" hidden>
+  <div class="gate-card">
+    <h1>Almost there</h1>
+    <p>This site can't find its database settings. Either put Notebook next to Media log on GitHub (it borrows Media log's settings), or paste your Firebase settings into <b>config.js</b>.</p>
+  </div>
+</div>
+
+<div class="gate" id="signinScreen" hidden>
+  <form class="gate-card" id="signinForm" novalidate>
+    <h1 class="brand"><span class="logo" data-icon="notebook"></span>Notebook</h1>
+    <p>Sign in with the same account you use for Media log.</p>
+    <div class="f"><label for="si-email">Email</label><input id="si-email" type="email" autocomplete="username" required></div>
+    <div class="f"><label for="si-pass">Password</label><input id="si-pass" type="password" autocomplete="current-password" required></div>
+    <div class="gate-msg" id="signinMsg" role="status"></div>
+    <button class="btn primary" type="submit">Sign in</button>
+    <button class="linkish" type="button" id="forgotBtn">Forgot password? Send me a reset email</button>
+  </form>
+</div>
+
+<div class="gate" id="deniedScreen" hidden>
+  <div class="gate-card">
+    <h1>No access</h1>
+    <p id="deniedText">This account isn't allowed in.</p>
+    <button class="btn" type="button" id="deniedSignout">Sign out</button>
+  </div>
+</div>
+
+<div class="gate" id="nameScreen" hidden>
+  <form class="gate-card" id="nameForm" novalidate>
+    <h1>Welcome</h1>
+    <p>What should we call you? Your partner sees this name on pages you edit and notes you send.</p>
+    <div class="f"><label for="nm-name">Your name</label><input id="nm-name" autocomplete="given-name" maxlength="40" required></div>
+    <div class="gate-msg" id="nameMsg" role="status"></div>
+    <button class="btn primary" type="submit">Continue</button>
+  </form>
+</div>
+
+<div class="shell" id="app" hidden>
+  <aside class="side" id="side" aria-label="Sidebar"></aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="main" id="main">
+    <div class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu">☰<span class="dot" id="menuBadge" hidden></span></button>
+      <nav class="crumbs" id="crumbs" aria-label="Breadcrumbs"></nav>
+      <div class="presence" id="presence"></div>
+      <div class="top-actions" id="topActions"></div>
+    </div>
+    <div class="net" id="net" hidden></div>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="config.js?v=30370fd5"></script>
+<!-- borrows Media Log's Firebase settings when both sites sit side by side on GitHub -->
+<script src="../media-log/config.js" onerror="void 0"></script>
+<script type="module" src="app.js?v=30370fd5"></script>
+</body>
+</html>

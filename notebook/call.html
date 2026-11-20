@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<title>Call</title>
+<style>
+@font-face { font-family: "Onest Variable"; font-display: swap; font-weight: 100 900; src: url(fonts/onest-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+2000-206F; }
+@font-face { font-family: "Onest Variable"; font-display: swap; font-weight: 100 900; src: url(fonts/onest-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0400-045F,U+0490-0491; }
+:root { --bg: #0b0d13; --surface: #161a24; --surface-2: #1f2433; --ink: #eceef4; --muted: #9aa1b4; --faint: #6b7286; --line: #2a3040; --accent: #ff6b8d; --accent-ink: #1a0a10; --danger: #ff5a5f; --font: "Rubik Variable", "Onest Variable", "Segoe UI", system-ui, -apple-system, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+a { color: var(--accent); }
+.center { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+.card { width: min(460px, 100%); display: grid; gap: 16px; justify-items: center; text-align: center; }
+.av { width: 112px; height: 112px; border-radius: 50%; background: #7c6cf0 center/cover; display: grid; place-items: center; font-size: 46px; font-weight: 800; color: #fff; box-shadow: 0 0 0 6px var(--surface), 0 0 0 7px var(--line); }
+.who { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.presence { color: var(--muted); margin: -10px 0 0; }
+.presence[data-here="1"] { color: var(--accent); }
+.presence[data-here="1"]::before { content: "● "; }
+.btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 14px; padding: 12px 20px; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-size: 17px; padding: 14px 30px; }
+.btn.stop { background: var(--danger); border-color: var(--danger); color: #fff; }
+.ghost { background: none; border: 0; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.status { min-height: 1.5em; color: var(--muted); font-size: 14px; }
+.status[data-kind="ok"] { color: var(--accent); } .status[data-kind="warn"] { color: #ffc56e; } .status[data-kind="bad"] { color: #ff8f93; }
+.tips { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; color: var(--muted); font-size: 13.5px; width: 100%; }
+.tips b { color: var(--ink); }
+.tips ul { margin: 6px 0 0; padding-left: 18px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 6px var(--surface), 0 0 0 7px var(--line), 0 0 0 0 rgb(63 207 138 / .5); } 50% { box-shadow: 0 0 0 6px var(--surface), 0 0 0 7px var(--line), 0 0 0 26px rgb(63 207 138 / 0); } }
+
+/* in call */
+#incall { position: fixed; inset: 0; background: #000; }
+.vwrap { position: absolute; overflow: hidden; background: #111520; display: grid; place-items: center; }
+.vwrap video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+#remoteWrap { inset: 0; }
+#selfWrap { right: 16px; bottom: 100px; width: min(260px, 30vw); aspect-ratio: 16 / 10; border-radius: 14px; border: 2px solid rgb(255 255 255 / .15); box-shadow: 0 10px 30px rgb(0 0 0 / .5); cursor: grab; touch-action: none; z-index: 2; }
+#selfWrap video { object-fit: cover; transform: scaleX(-1); }
+body.sharing #selfWrap video { transform: none; object-fit: contain; }
+body.swapped #remoteWrap { inset: auto; right: 16px; bottom: 100px; width: min(260px, 30vw); aspect-ratio: 16 / 10; border-radius: 14px; z-index: 2; }
+body.swapped #selfWrap { inset: 0 !important; width: auto; aspect-ratio: auto; border-radius: 0; border: 0; z-index: 1; }
+.vwrap .ph { position: absolute; inset: 0; display: none; place-items: center; background: #111520; }
+.vwrap.nocam .ph { display: grid; }
+.vwrap.nocam video { opacity: 0; }
+.ph .av { width: 96px; height: 96px; font-size: 40px; }
+#selfWrap .ph .av { width: 48px; height: 48px; font-size: 20px; box-shadow: none; }
+.topbar { position: absolute; left: 0; right: 0; top: 0; padding: max(12px, env(safe-area-inset-top)) 16px 30px; display: flex; gap: 12px; align-items: center; background: linear-gradient(rgb(0 0 0 / .7), transparent); z-index: 3; font-size: 14px; }
+.topbar .nm { font-weight: 800; font-size: 16px; }
+#timer { color: #ddd; font-variant-numeric: tabular-nums; }
+#quality { margin-left: auto; color: #cfd3dd; font-size: 12.5px; background: rgb(0 0 0 / .45); padding: 3px 10px; border-radius: 99px; }
+#quality[data-kind="direct"]::before { content: "● "; color: var(--accent); }
+#quality[data-kind="relay"]::before { content: "● "; color: #ffc56e; }
+.bar { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 10px; background: rgb(18 21 30 / .85); border: 1px solid rgb(255 255 255 / .1); padding: 10px; border-radius: 22px; backdrop-filter: blur(10px); z-index: 3; }
+.cb { width: 54px; height: 54px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .12); color: #fff; font-size: 22px; display: grid; place-items: center; }
+.cb:hover { background: rgb(255 255 255 / .2); }
+.cb.off { background: #fff; color: #111; }
+.cb.on { background: var(--accent); color: var(--accent-ink); }
+.cb.end { background: var(--danger); width: 64px; border-radius: 28px; }
+.cb.small { width: 44px; height: 44px; font-size: 18px; align-self: center; }
+#incall .status { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 3; background: rgb(0 0 0 / .55); padding: 4px 14px; border-radius: 99px; color: #eee; }
+#incall .status:empty { display: none; }
+#diag { position: absolute; left: 50%; top: 110px; transform: translateX(-50%); width: min(520px, calc(100vw - 32px)); background: #3a1c22; border: 1px solid #7a2f3c; color: #ffd6dd; padding: 12px 14px; border-radius: 14px; font-size: 14px; z-index: 4; }
+.mock-banner { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 9; background: #161a26; border: 1px solid #2f3546; color: #cfd3dd; font-size: 12.5px; padding: 6px 12px; border-radius: 12px; width: max-content; max-width: calc(100vw - 20px); text-align: center; }
+body[data-screen="incall"] .mock-banner { bottom: 100px; }
+@media (max-width: 600px) { #selfWrap { width: 34vw; aspect-ratio: 3 / 4; bottom: 96px; } .cb { width: 48px; height: 48px; font-size: 19px; } .cb.small { display: none; } #quality { display: none; } }
+.lobby-top { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: max(16px, env(safe-area-inset-top)) 20px 0; font-size: 17px; }
+.lobby-top .logo { width: 34px; height: 34px; filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent)); }
+.lobby-top .grow { flex: 1; }
+@font-face { font-family: "Departure Mono"; font-style: normal; font-display: swap; font-weight: 400; src: url(fonts/departure-mono-regular.woff2) format("woff2"); }
+
+/* pixel titles */
+h1, h2, h3, h4, .brand, .lobby-top > b, .who, .tips > b { font-family: "Departure Mono", "JetBrains Mono Variable", ui-monospace, monospace; font-weight: 400; letter-spacing: -0.02em; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-latin-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-cyrillic-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-latin-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-cyrillic-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+</style>
+</head>
+<body>
+<!-- lobby -->
+<div class="center" id="lobby">
+  <div class="lobby-top" id="lobbyTop"><span class="logo" data-icon="call"></span><b>Video call</b><span class="grow"></span></div>
+  <div class="card">
+    <div id="signin" hidden>
+      <p class="who">Sign in first</p>
+      <p class="presence">Sign in with your usual account to call.</p>
+    </div>
+    <div class="card" id="lobbyMain">
+      <div class="av" id="avatar">?</div>
+      <p class="who" id="who">…</p>
+      <p class="presence" id="presence"></p>
+      <button class="btn go" id="callBtn" type="button">📞 Video call</button>
+      <button class="btn" id="noteBtn" type="button" hidden>💌 Send her a note to come here</button>
+      <div class="status" id="status"></div>
+      <button class="ghost" id="notifBtn" type="button" hidden>Show a pop-up when a call comes in while this tab is in the background</button>
+      <div class="tips">
+        <b>Good to know</b>
+        <ul>
+          <li>Keep this page open in a tab when you're free, so you hear the ring.</li>
+          <li><b>Watching a film together:</b> open Movie night in another tab, then press 🖥 here and pick that <b>Chrome tab</b> with <b>“Also share tab audio”</b> on. Headphones stop the film echoing into your mic.</li>
+          <li>The green or yellow dot at the top of a call says whether you're connected <b>directly</b> or through a <b>relay</b>.</li>
+        </ul>
+      </div>
+      <div class="row"><a href="/" class="ghost">← All our tools</a><a href="./" class="ghost">Notebook</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ringing -->
+<div class="center" id="ringing" hidden>
+  <div class="card">
+    <div class="av pulse" id="ringAv">📞</div>
+    <p class="who" id="ringText"></p>
+    <p class="presence" id="ringSub"></p>
+    <div class="row">
+      <button class="btn go" id="acceptBtn" type="button">Answer</button>
+      <button class="btn stop" id="declineBtn" type="button">Decline</button>
+    </div>
+  </div>
+</div>
+
+<!-- in call -->
+<div id="incall" hidden>
+  <div class="vwrap" id="remoteWrap"><video id="remote" autoplay playsinline></video><div class="ph"><div class="av" id="remoteAv">?</div></div></div>
+  <div class="vwrap" id="selfWrap"><video id="self" autoplay playsinline muted></video><div class="ph"><div class="av">🙈</div></div></div>
+  <div class="topbar"><span class="nm" id="remoteName"></span><span id="timer">0:00</span><span id="quality">Connecting…</span></div>
+  <div class="status" id="status2"></div>
+  <div id="diag" hidden></div>
+  <div class="bar">
+    <button class="cb" id="micBtn" type="button" aria-label="Microphone">🎙️</button>
+    <button class="cb" id="camBtn" type="button" aria-label="Camera">📷</button>
+    <button class="cb" id="shareBtn" type="button" aria-label="Share screen">🖥</button>
+    <button class="cb small" id="flipBtn" type="button" title="Switch camera" aria-label="Switch camera">🔄</button>
+    <button class="cb small" id="swapBtn" type="button" title="Swap big and small video" aria-label="Swap videos">⇄</button>
+    <button class="cb small" id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen">⤢</button>
+    <button class="cb end" id="hangBtn" type="button" title="Hang up" aria-label="Hang up">📞</button>
+  </div>
+</div>
+<script src="config.js?v=30370fd5"></script>
+<script src="../media-log/config.js" onerror="void 0"></script>
+<script type="module" src="call.js?v=30370fd5"></script>
+</body>
+</html>
