@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f121a">
+<title>Media log</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d93a63'/%3E%3Cpath d='M9 22V10h3l4 6 4-6h3v12h-3v-7l-4 6-4-6v7z' fill='white'/%3E%3C/svg%3E">
+<link rel="manifest" id="manifestLink" href="manifest.webmanifest">
+<link rel="apple-touch-icon" id="appleIcon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Media log">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Shown while starting up -->
+<div class="gate" id="bootScreen"><div class="hint">Loading…</div></div>
+
+<!-- Setup not finished (config.js still has placeholders) -->
+<div class="gate" id="setupScreen" hidden>
+  <div class="gate-card">
+    <h1>Almost there</h1>
+    <p>This site isn't connected to its database yet. Open <b>config.js</b> and paste in your Firebase settings, as described in the setup guide.</p>
+  </div>
+</div>
+
+<!-- Sign in -->
+<div class="gate" id="signinScreen" hidden>
+  <form class="gate-card" id="signinForm" novalidate>
+    <h1 class="brand"><span class="logo"></span>Media log</h1>
+    <p>Sign in to see your shared list.</p>
+    <div class="f"><label for="si-email">Email</label><input id="si-email" type="email" autocomplete="username" required></div>
+    <div class="f"><label for="si-pass">Password</label><input id="si-pass" type="password" autocomplete="current-password" required></div>
+    <div class="gate-msg" id="signinMsg" role="status"></div>
+    <button class="btn primary" type="submit" id="signinBtn">Sign in</button>
+    <button class="linkish" type="button" id="forgotBtn">Forgot password? Send me a reset email</button>
+  </form>
+</div>
+
+<!-- Signed in but not on the allowed list -->
+<div class="gate" id="deniedScreen" hidden>
+  <div class="gate-card">
+    <h1>No access</h1>
+    <p id="deniedText">This account isn't allowed into this list.</p>
+    <button class="btn" type="button" id="deniedSignout">Sign out</button>
+  </div>
+</div>
+
+<!-- First sign-in: pick a name -->
+<div class="gate" id="nameScreen" hidden>
+  <form class="gate-card" id="nameForm" novalidate>
+    <h1>Welcome</h1>
+    <p>What should the list call you? The other person will see this name on items you add.</p>
+    <div class="f"><label for="nm-name">Your name</label><input id="nm-name" autocomplete="given-name" maxlength="40" required></div>
+    <div class="gate-msg" id="nameMsg" role="status"></div>
+    <button class="btn primary" type="submit">Continue</button>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <h1 class="brand"><a href="#library" class="home-link" id="homeLink" title="Home: everything in your library"><span class="logo"></span>Media log</a></h1>
+      <div class="stats" id="stats">Loading…</div>
+    </div>
+    <div class="head-right">
+      <nav class="views" id="views" aria-label="Views">
+        <a href="#library" id="navLibrary">Library</a>
+        <a href="#year" id="navYear">Year in review</a>
+        <a href="#favourites" id="navFavs">Favourites</a>
+        <a href="#recommendations" id="navRecs" hidden>Recommendations<span class="nav-count" id="inboxCount" hidden></span></a>
+        <a href="#trophies" id="navTrophies">Trophy Room</a>
+      </nav>
+      <button class="btn primary" id="addBtn" type="button" aria-label="Add"><span class="add-plus" aria-hidden="true">+</span><span class="add-txt"> Add</span></button>
+      <div class="acct">
+        <a href="#notifications" class="bell" id="bellBtn" aria-label="Notifications"><svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true"><path d="M10 2.8a5 5 0 0 0-5 5v2.6c0 .9-.3 1.8-.9 2.5l-.8 1h13.4l-.8-1a4 4 0 0 1-.9-2.5V7.8a5 5 0 0 0-5-5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 16.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="nav-count bell-count" id="bellCount" hidden></span></a>
+        <button class="acct-btn" id="acctBtn" type="button" aria-haspopup="true" aria-expanded="false"><span id="acctAvWrap"><span class="av">?</span></span><span id="acctName">You</span></button>
+        <div class="acct-menu" id="acctMenu" hidden>
+          <div class="who-am-i" id="acctEmail"></div>
+          <button type="button" id="renameBtn">Edit my profile</button>
+          <button type="button" id="iconSetBtn" class="set-item"><span class="set-mini" id="setMini"></span><span class="grow">Icon set</span><small id="setCur"></small><span class="chev" aria-hidden="true">›</span></button>
+          <button type="button" id="backupBtn">Backup / restore</button>
+          <button type="button" id="installBtn">Install as an app</button>
+          <button type="button" id="signoutBtn">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+  <div class="row" id="who" role="group" aria-label="Filter by person" hidden></div>
+
+  <section id="libraryView">
+    <div id="nudges" class="nudges" hidden></div>
+    <div id="upnext" class="panel upnext" hidden></div>
+    <div class="controls">
+      <div class="row" id="types" role="group" aria-label="Filter by type"></div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Filter by status"></div>
+      <div class="row">
+        <input class="search" id="search" type="search" placeholder="Search titles, creators, genres, notes…" aria-label="Search">
+        <select class="sort genre" id="genre" aria-label="Filter by genre or tag"><option value="">All genres &amp; tags</option></select>
+        <select class="sort" id="sort" aria-label="Sort">
+          <option value="recent">Recently updated</option>
+          <option value="title">Title A–Z</option>
+          <option value="rating">Highest rated</option>
+          <option value="added">Recently added</option>
+        </select>
+      </div>
+    </div>
+    <div id="list" style="margin-top:16px"></div>
+  </section>
+
+  <section id="yearView" hidden></section>
+  <section id="favView" hidden></section>
+  <section id="trophyView" hidden></section>
+  <section id="faqView" hidden>
+    <div class="faq">
+      <div class="faq-head"><h2>Help &amp; FAQ</h2><a href="#library" class="linkish">← Back to the library</a></div>
+
+      <h3>Tracking</h3>
+      <details><summary>How do I add something?</summary><div>
+        <p>Press <b>+ Add</b>. Type a title and press <b>Search online</b> to fill in the cover, year, episode count and genres automatically. You can also paste a link from AniList, MyAnimeList, Kitsu, TVmaze, IMDb, RAWG, Open Library or Apple Podcasts into the title box.</p>
+        <p>For a cover, drop or paste an image onto the cover box. On a phone, copy an image from anywhere and tap <b>Paste copied image</b>.</p></div></details>
+      <details><summary>Where does Search online get its information?</summary><div>
+        <p>Each type has a main source and a backup: anime and manga from AniList, then Kitsu; TV from TVmaze, then OMDb; movies from OMDb, then Apple; books from Open Library, then Google Books; podcasts from Apple, then gpodder.net; games from <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a>, then OMDb.</p>
+        <p>If one is blocked or slow where you are, the app quietly tries the next and remembers which one worked on your device. The hint under the title says where the results came from. Games, and the OMDb backups, need free keys in <code>config.js</code>; the setup guide explains how to get them.</p></div></details>
+      <details><summary>How do I log progress?</summary><div>
+        <p>Use the <b>−</b> and <b>+</b> buttons on a card, or type a number into the box between them. The bar shows how far through you are. When you reach the end, the app asks whether to mark it finished.</p>
+        <p>Each type counts in its own unit (episodes, chapters, pages, volumes, hours…). You can change the unit in the edit form.</p></div></details>
+      <details><summary>What do the tabs mean?</summary><div>
+        <p><b>In progress</b>: you're on it now. <b>Planned</b>: you want to get to it. <b>Paused</b>: on hold. <b>Caught up</b>: you've seen everything that's out and are waiting for more. <b>Finished</b> and <b>Dropped</b> mean what they say. Swipe left or right on a phone to switch tabs.</p></div></details>
+      <details><summary>Games that never end?</summary><div>
+        <p>For sandbox or online games, tick <b>No ending</b> in the edit form. The card then shows hours played and when you last played, instead of a finish button.</p></div></details>
+      <details><summary>How do rewatches and rereads work?</summary><div>
+        <p>Open something you've finished and press <b>Start again</b> in the edit form. Your progress resets and the card shows which time through this is. Finishing it again adds to the count (×2, ×3…).</p></div></details>
+      <details><summary>Why is the app asking "Still on these?"</summary><div>
+        <p>Anything in progress that hasn't been touched for 2 months shows up there. You can keep it, pause it or drop it in one tap, or hide the reminder for 2 weeks.</p></div></details>
+
+      <h3>Together</h3>
+      <details><summary>What's the difference between "Same progress" and "Each at our own pace"?</summary><div>
+        <p>When you both are in something, it's <b>Together</b>. With <b>Same progress</b> there's one shared progress bar, for things you watch side by side. With <b>Each at our own pace</b> you each have your own progress, status, dates and rating.</p></div></details>
+      <details><summary>Recommendations</summary><div>
+        <p>In the edit form, tick <b>Recommend to…</b> and add a note if you like. It appears in the other person's <b>Recommendations</b> page, where they can tap <b>Add to my Planned</b> or <b>No thanks</b>. Tick <b>Just recommending</b> if it shouldn't go on your own list.</p></div></details>
+      <details><summary>Up next together</summary><div>
+        <p>Tick <b>Up next together</b> in the edit form of a Together item to put it in your shared queue at the top of the library. It leaves the queue when you finish it.</p></div></details>
+      <details><summary>Are episode notes spoiler-safe?</summary><div>
+        <p>Yes. A note is attached to the episode or chapter you were on. The other person only sees it once their own progress has reached that point. Until then it stays hidden.</p></div></details>
+
+      <h3>Genres and tags</h3>
+      <details><summary>What's in Notifications (the bell)?</summary><div>
+        <p>Everything the other person did that involves you, newest first: comments on episodes, ratings, reviews, recommendations, things they finished, and achievements and levels for both of you. The red number counts what's new since you last opened it, on any device. Tap an entry to open that item. Episode notes from further ahead stay hidden until you get there.</p></div></details>
+      <details><summary>Can I zoom or move a picture?</summary><div>
+        <p>Yes. When you pick a cover or a profile photo, a frame opens: drag to move the picture, pinch (or use the slider) to zoom, then press <b>Use this</b>. To change a cover later, open the item and tap <b>Adjust (zoom / move)</b> under it.</p></div></details>
+      <details><summary>Why can't I add my own genre?</summary><div>
+        <p>Genres come from a fixed list of 20, because they count towards your genre badges in the Trophy Room. Tap the ones that fit. For anything else, like "cosmic horror" or "comfort watch", use <b>Tags</b>: you can type whatever you like there. Online search sorts this out for you: "detective" becomes Mystery, and genres that aren't on the list are added as tags.</p>
+        <p>Anything else goes in <b>Tags</b>. Tags are your own words, like "comfort watch" or "scary at night", and you can filter by them too.</p></div></details>
+      <details><summary>Which genres are there?</summary><div>
+        <p>Horror, Mystery, Thriller, Psychological, Sci-fi, Fantasy, Action, Adventure, Comedy, Drama, Romance, Slice of life, Crime, Supernatural, Historical, Survival, Mecha, Sports, Music, Non-fiction.</p></div></details>
+
+      <h3>Trophy Room</h3>
+      <details><summary>How do I earn XP?</summary><div>
+        <p>You earn XP for everything you log, counted straight from your list. The full table is under <b>How XP works</b> in the Trophy Room. In short: time spent (about 10 XP an hour), finishing things, ratings, reviews, episode notes, achievements and genre badges.</p></div></details>
+      <details><summary>What's Our Swamp?</summary><div>
+        <p>Your shared level, with 15 stages. It grows from things you share: time spent on Together items, finishing them, recommendations one of you took, episode notes, and Together achievements either of you unlocked.</p></div></details>
+      <details><summary>How do genre badges work?</summary><div>
+        <p>Every genre has a bronze, silver and gold badge, for 5, 15 and 30 finished. Something with two genres counts towards both.</p></div></details>
+      <details><summary>How do achievements work?</summary><div>
+        <p>Each badge says what it takes, and locked ones show how close you are ("64 / 100"). When you unlock one, a message pops up; tap <b>Trophy Room</b> to jump straight to it.</p>
+        <p>Once earned, a badge stays even if things change later, for example if you delete the item that earned it. A few are about moments, like logging progress at 3 am or finishing something you'd dropped, so they only count from when they happen.</p></div></details>
+
+      <h3>Year in review</h3>
+      <details><summary>How are hours estimated?</summary><div>
+        <p>Roughly: an anime episode is 23 minutes, a TV episode 45, a podcast episode 40, a manga chapter 5, a book page 1.5 minutes, and a movie about 2 hours. Games use the hours you log.</p></div></details>
+      <details><summary>What do the activity calendar and streaks count?</summary><div>
+        <p>A day counts if you logged progress or finished something that day. Your streak is how many days in a row you did that.</p></div></details>
+      <details><summary>Wrapped</summary><div>
+        <p>Press <b>✨ wrapped</b> in Year in review for a summary of your year: what you finished, your top genres, your hours and your favourites. You can share it as text.</p>
+        <p><b>💞 Our year</b>, next to it, makes a picture of your year together: what you finished together, your taste match and genre, your best match and biggest disagreement, each of your totals and your Swamp level. Save it or send it straight from there. A reminder shows up in Notifications on 20 December.</p></div></details>
+
+      <h3>Your data</h3>
+      <details><summary>Who can see our list?</summary><div>
+        <p>Only the two of you. The database only lets in the two email addresses set up for this site.</p></div></details>
+      <details><summary>How do backups work?</summary><div>
+        <p>Use <b>Backup / restore</b> in your account menu to download a backup file (or send it somewhere on a phone). The app reminds you about once a week. To restore, open the same menu and press <b>Restore from file…</b>.</p></div></details>
+      <details><summary>Can I use it like an app on my phone?</summary><div>
+        <p>Yes. Choose <b>Install as an app</b> in the account menu for step-by-step instructions. The home-screen icon matches your accent colour.</p></div></details>
+      <details><summary>Does it work offline?</summary><div>
+        <p>Mostly. Your list is saved on the device, so you can look at it and log progress without internet. Changes sync when you're back online. Searching online needs internet.</p></div></details>
+    </div>
+  </section>
+
+  <section id="activityView" hidden><div class="panel recs-panel act-panel"><div class="faq-head act-head"><h2>Notifications</h2><a href="#library" class="linkish">← Back to the library</a></div><div class="act-body" id="activityBody"></div></div></section>
+  <section id="recsView" hidden><div class="panel recs-panel"><div class="inbox-body" id="inboxBody"></div></div></section>
+
+  <footer>
+    <span id="saveState">&nbsp;</span>
+    <span>Media log · <a href="#faq" id="faqLink">Help &amp; FAQ</a></span>
+  </footer>
+</div>
+
+<!-- Edit dialog -->
+<div class="overlay" id="editOverlay" hidden>
+  <form class="modal" id="editForm" role="dialog" aria-modal="true" aria-labelledby="editTitle" novalidate>
+    <div class="modal-head"><h2 id="editTitle">Add</h2><button type="button" class="x-btn" data-close="edit" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="edit-grid">
+      <div class="cover-edit">
+        <label class="drop" id="drop" for="coverFile" tabindex="0" role="button" aria-label="Add a cover image">Drop, paste or click to add a cover</label>
+        <div class="links">
+          <a class="linkish" id="findCover" href="#" target="_blank" rel="noopener">Find a cover online ↗</a>
+          <button class="paste-btn" type="button" id="pasteCover"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M7 3.5h6M7.5 2.5h5a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM6.5 4H5a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 5 18h10a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 15 4h-1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Paste copied image</button>
+          <div class="paste-box" id="pasteBox" contenteditable="true" role="textbox" aria-label="Press and hold, then tap Paste" hidden></div>
+          <button class="linkish" type="button" id="adjustCover" hidden>Adjust (zoom / move)</button>
+          <button class="linkish" type="button" id="removeCover" hidden>Remove cover</button>
+        </div>
+        <div class="hint cover-hint" id="coverHint" role="status" hidden></div>
+        <input type="file" id="coverFile" accept="image/*" hidden>
+      </div>
+      <div class="fields">
+        <div class="f sec first">Details</div>
+        <div class="f">
+          <label for="f-title">Title</label>
+          <div class="title-row">
+            <input id="f-title" maxlength="300" required autocomplete="off" placeholder="e.g. Frieren, or paste a link">
+            <button class="btn" type="button" id="lookupBtn">Search online</button>
+          </div>
+          <div class="hint" id="lookupHint"></div>
+          <div class="results" id="results" hidden></div>
+          <div class="seasons" id="seasons" hidden></div>
+        </div>
+        <div class="f s2"><label for="f-type">Type</label><select id="f-type"></select></div>
+        <div class="f s2"><label for="f-status" id="lbl-status">Status</label><select id="f-status"></select></div>
+        <div class="f s2"><label for="f-season">Season / part</label><input id="f-season" maxlength="100" placeholder="optional"></div>
+        <div class="f s3"><label for="f-creator">Creator</label><input id="f-creator" maxlength="200" placeholder="studio, author, developer…"></div>
+        <div class="f s3"><label for="f-year">Year</label><input id="f-year" maxlength="4" inputmode="numeric" placeholder="optional"></div>
+        <div class="f genre-f"><div class="g-head"><label id="genreL">Genres</label><span class="g-count" id="genreCount"></span></div>
+          <input type="hidden" id="f-genres">
+          <div class="g-picks" id="genreChips" role="group" aria-labelledby="genreL"></div>
+          <div class="hint">Tap to pick. Anything else goes in Tags.</div>
+        </div>
+        <div class="f genre-f"><label for="tagEntry">Tags</label>
+          <input type="hidden" id="f-tags">
+          <div class="chips-input" id="tagBox">
+            <span id="tagChips" class="g-chips"></span>
+            <input id="tagEntry" autocomplete="off" maxlength="40" placeholder="comfort watch, scary at night…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="tagSuggest" enterkeyhint="enter">
+          </div>
+          <div class="g-suggest" id="tagSuggest" role="listbox" hidden></div>
+        </div>
+        <div class="f"><label for="f-platform">Where</label><input id="f-platform" maxlength="100" placeholder="Crunchyroll, Switch, Kindle…"></div>
+        <div class="f" id="f-format-wrap" hidden><label id="f-format-l">Format</label><div class="seg seg3" id="f-format" role="group" aria-labelledby="f-format-l"></div><div class="hint" id="formatHint" hidden></div></div>
+        <div class="f" id="f-people-wrap" hidden><label id="f-people-l" class="sec-label">Who's in</label><div class="people-pick" id="f-people" role="group" aria-labelledby="f-people-l"></div><div class="pace-block" id="f-pace-wrap" hidden><span class="sub-label" id="f-pace-l">Tracking</span><div class="seg" id="f-pace" role="group" aria-labelledby="f-pace-l"></div><div class="hint" id="peopleHint"></div><div class="hint pace-partner" id="paceHint"></div>
+          <label class="check-row" id="f-queue-wrap" for="f-queue"><input type="checkbox" id="f-queue"><span><b>Up next together</b><small>Put it in the shared queue of what you watch or read next.</small></span></label></div>
+          <div class="suggest-block" id="f-suggest-wrap" hidden>
+            <label class="check-row" for="f-suggest"><input type="checkbox" id="f-suggest"><span><b id="f-suggest-l">Recommend to partner</b><small id="f-suggest-s">Shows up in their recommendations. They can add it to their list or pass.</small></span></label>
+            <div class="suggest-more" id="f-suggest-more" hidden>
+              <input id="f-suggest-note" maxlength="500" placeholder="Why you think they'd like it (optional)">
+              <label class="check-row small" for="f-suggest-only"><input type="checkbox" id="f-suggest-only"><span><b>Just recommending</b><small>Don't put it on my own list.</small></span></label>
+            </div>
+          </div></div>
+        <div class="f sec">Progress</div>
+        <div class="f s2"><label for="f-progress" id="lbl-progress">Progress</label><input id="f-progress" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div class="f s2"><label for="f-total">Total</label><input id="f-total" type="number" min="0" step="any" inputmode="decimal" placeholder="unknown"></div>
+        <div class="f s2"><label for="f-unit">Counted in</label><select id="f-unit"></select><div class="seg seg-sm" id="f-unit-seg" role="group" aria-label="Counted in" hidden></div></div>
+        <div class="f endless-f" id="f-endless-wrap" hidden><label class="check-row" for="f-endless"><input type="checkbox" id="f-endless"><span><b>No ending</b><small>Sandbox or always-online game, like Valheim or Minecraft. Shows hours played, no finish button.</small></span></label></div>
+        <div class="f s3"><label for="f-started" id="lbl-started">Started</label><input id="f-started" type="date"></div>
+        <div class="f s3"><label for="f-finished" id="lbl-finished">Finished</label><input id="f-finished" type="date"></div>
+        <div class="f s3" id="f-times-wrap" hidden><label for="f-times">Times finished</label><input id="f-times" type="number" min="1" max="999" step="1" inputmode="numeric"></div>
+        <div class="f again-f" id="againWrap" hidden><button type="button" class="btn sm" id="againBtn">↻ Start again (rewatch / reread)</button><span class="hint">Resets progress to 0 and counts it when you finish again.</span></div>
+        <div class="f ep-f" id="epNotesWrap" hidden>
+          <label class="sub-label">Episode notes</label>
+          <div class="ep-notes" id="epNotes"></div>
+          <div class="ep-add" id="epAdd"><span class="ep-at-in"><span id="epAtL">Ep</span><input id="epAt" type="number" min="0" step="any" inputmode="decimal" aria-label="At which point"></span><input id="epText" maxlength="1000" placeholder="that ending??" aria-label="Note"><button type="button" class="btn sm" id="epAddBtn">Add</button></div>
+        </div>
+        <div class="f"><label for="f-notes">Notes</label><textarea id="f-notes" maxlength="4000" placeholder="Where you left off, who recommended it…"></textarea></div>
+        <div class="f sec">Rating &amp; review</div>
+        <div class="f s3"><label for="f-rating" id="lbl-rating">Rating</label><select id="f-rating"></select></div>
+        <div class="f s3 fav-f"><label class="sub-label" for="f-fav">&nbsp;</label><label class="fav-toggle" for="f-fav"><input type="checkbox" id="f-fav"><span><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 17s-6.5-3.9-6.5-8.6A3.6 3.6 0 0 1 10 6.3a3.6 3.6 0 0 1 6.5 2.1C16.5 13.1 10 17 10 17z" fill="currentColor"/></svg><span id="f-fav-l">Favourite</span></span></label></div>
+        <div class="f review-f"><label for="f-review" id="lbl-review">My review</label><textarea id="f-review" maxlength="4000" placeholder="What did you think?"></textarea><div class="other-reviews" id="otherReviews"></div></div>
+      </div>
+    </div>
+    <div class="unsaved-pop" id="unsavedPop" hidden>
+      <div class="unsaved-card" role="alertdialog" aria-labelledby="unsavedT" aria-describedby="unsavedD">
+        <b id="unsavedT">You haven't saved yet</b>
+        <p id="unsavedD">Save your changes before closing?</p>
+        <div class="row"><button class="btn" type="button" id="unsavedDiscard">Don't save</button><button class="btn primary" type="button" id="unsavedSave">Save</button></div>
+      </div>
+    </div>
+    <div class="form-msg" id="formMsg" role="alert" hidden></div>
+    <div class="modal-actions">
+      <button class="btn danger" type="button" id="deleteBtn">Delete</button>
+      <div class="row">
+        <button class="btn" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn primary" type="submit" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Backup dialog -->
+<div class="overlay" id="backupOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+    <div class="modal-head"><h2 id="backupTitle">Backup / restore</h2><button type="button" class="x-btn" data-close="backup" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="row backup-quick"><button class="btn primary" type="button" id="dlBackup">Download backup file</button><button class="btn" type="button" id="shareBackup" hidden>Send to…</button><button class="btn" type="button" id="openBackup">Restore from file…</button><input type="file" id="backupFile" accept=".json,application/json,text/plain" hidden></div>
+    <p class="hint" style="margin:0">Or copy this text somewhere safe to keep a backup, covers included. To restore, or to bring in a list exported from the Claude version, paste it here and press Restore. Restoring adds or updates items; it never deletes.</p>
+    <textarea class="backup" id="backupText" aria-label="Backup data" spellcheck="false"></textarea>
+    <div class="hint" id="backupHint"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="restoreBtn">Restore from pasted text</button>
+      <div class="row">
+        <button class="btn" type="button" id="copyBtn">Copy</button>
+        <button class="btn primary" type="button" id="backupClose">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Year wrapped -->
+<div class="overlay" id="wrapOverlay" hidden>
+  <div class="modal wrap-modal" role="dialog" aria-modal="true" aria-labelledby="wrapTitle">
+    <div class="modal-head"><h2 id="wrapTitle">Wrapped</h2><button type="button" class="x-btn" data-close="wrap" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div id="wrapBody"></div>
+    <div class="modal-actions"><span class="hint" id="wrapHint">Tip: take a screenshot to share it.</span><div class="row"><button class="btn" type="button" id="wrapSave" hidden>Save image</button><button class="btn" type="button" id="wrapShare">Share as text</button></div></div>
+  </div>
+</div>
+
+<!-- Install help -->
+<div class="overlay" id="installOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle" style="width:min(460px,100%)">
+    <div class="modal-head"><h2 id="installTitle">Install as an app</h2><button type="button" class="x-btn" data-close="install" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div id="installBody" class="install-body"></div>
+  </div>
+</div>
+
+<!-- Profile dialog -->
+<div class="overlay" id="renameOverlay" hidden>
+  <form class="modal profile-modal" id="renameForm" role="dialog" aria-modal="true" aria-labelledby="renameTitle" novalidate>
+    <div class="modal-head"><h2 id="renameTitle">My profile</h2><button type="button" class="x-btn" data-close="rename" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="pf-top">
+      <label id="pfPreview" class="pf-pick" for="pfFile" title="Choose a photo"></label>
+      <div class="pf-actions">
+        <label class="btn sm" for="pfFile" id="pfUpload" role="button" tabindex="0">Upload photo</label>
+        <button class="linkish" type="button" id="pfRemove" hidden>Remove photo</button>
+        <span class="hint">or paste an image here (Ctrl+V)</span>
+      </div>
+      <input type="file" id="pfFile" accept="image/*" hidden>
+    </div>
+    <div class="f pf-field"><label for="rn-name">Name</label><input id="rn-name" maxlength="40" autocomplete="given-name"></div>
+    <div class="f pf-field" id="pfColorsWrap"><label>Circle colour (when there's no photo)</label><div class="swatches" id="pfColors"></div></div>
+    <div class="f pf-field pf-page-colour"><label>Page colour</label><div class="swatches" id="accentPick" role="group" aria-label="Page colour"></div><span class="hint">Buttons and highlights in every tool. Changes right away; ✦ matches your icon set.</span></div>
+    <div class="hint" id="pfMsg" role="status"></div>
+    <div class="modal-actions"><span></span><div class="row"><button class="btn" type="button" id="renameCancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></div>
+  </form>
+</div>
+
+<div class="overlay" id="iconSetOverlay" hidden>
+  <div class="modal set-modal" role="dialog" aria-modal="true" aria-labelledby="iconSetTitle">
+    <div class="modal-head"><h2 id="iconSetTitle">Icon set</h2><button type="button" class="x-btn" data-close="iconSet" aria-label="Close"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="ml-sets" id="setPick" role="group" aria-label="Icon set"></div>
+    <p class="hint">Changes the icons in every tool and on your home screen. Each set brings its own colours; you can pick a different page colour in Edit my profile.</p>
+    <div class="modal-actions"><span></span><div class="row"><button class="btn primary" type="button" id="iconSetDone">Done</button></div></div>
+  </div>
+</div>
+
+<div class="rev-pop" id="revPop" role="dialog" aria-label="Reviews" hidden></div>
+<div class="offline" id="offline" hidden>Offline. Changes will sync when you're back online.</div>
+<div class="overlay crop-ov" id="cropOverlay" hidden>
+  <div class="modal crop-modal" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+    <div class="modal-head"><h2 id="cropTitle">Adjust picture</h2></div>
+    <div class="crop-stage" id="cropStage"><img id="cropImg" alt="" draggable="false"></div>
+    <div class="crop-zoom"><button type="button" class="crop-step" data-zstep="-1" aria-label="Zoom out">−</button><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom"><button type="button" class="crop-step" data-zstep="1" aria-label="Zoom in">+</button></div>
+    <div class="hint crop-hint">Drag to move. Pinch, scroll or use the slider to zoom.</div>
+    <div class="modal-actions"><button class="btn" type="button" id="cropReset">Reset</button><div class="row"><button class="btn" type="button" id="cropCancel">Cancel</button><button class="btn primary" type="button" id="cropOk">Use this</button></div></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"><span id="toastMsg"></span><button type="button" id="toastAct" hidden></button><button type="button" class="toast-x" id="toastX" aria-label="Dismiss"><svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

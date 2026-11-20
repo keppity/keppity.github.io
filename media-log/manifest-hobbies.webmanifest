@@ -1,0 +1,28 @@
+{
+  "name": "Media log",
+  "short_name": "Media log",
+  "description": "Our shared list of what we watch, read, play and listen to.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f121a",
+  "theme_color": "#0f121a",
+  "icons": [
+    {
+      "src": "icons/icon-192-hobbies.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512-hobbies.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512-hobbies.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
