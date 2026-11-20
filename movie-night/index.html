@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<title>Movie night</title>
+<style>
+@font-face { font-family: "Onest Variable"; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/onest-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Onest Variable"; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/onest-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Onest Variable"; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/onest-cyrillic-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+:root { --bg: #0b0d13; --surface: #161a24; --surface-2: #1f2433; --ink: #eceef4; --muted: #9aa1b4; --faint: #6b7286; --line: #2a3040; --accent: #ff6b8d; --accent-ink: #1a0a10; --font: "Rubik Variable", "Onest Variable", "Segoe UI", system-ui, -apple-system, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- start screen ---------- */
+.start { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+.start-card { width: min(640px, 100%); display: grid; gap: 18px; }
+.hub-link { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; }
+.hub-link:hover { color: var(--ink); }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 26px; letter-spacing: -0.02em; }
+.logo { width: 42px; height: 42px; filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--accent) 40%, transparent)); }
+#accSlot { display: flex; align-items: center; gap: 8px; margin-left: auto; } .hub-link:not([hidden]) + #accSlot { margin-left: 8px; } /* account button sits in the right corner */
+.drop { border: 2px dashed var(--line); border-radius: 20px; padding: 44px 20px; text-align: center; background: var(--surface); transition: .15s; display: grid; gap: 8px; justify-items: center; }
+.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); transform: scale(1.01); }
+.drop .big { font-size: 46px; }
+.drop b { font-size: 18px; }
+.drop p { margin: 0; color: var(--muted); }
+.btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 11px; padding: 9px 16px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.tips { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; color: var(--muted); font-size: 14px; }
+.tips h3 { margin: 0 0 6px; color: var(--ink); font-size: 15px; }
+.tips ol, .tips ul { margin: 0; padding-left: 20px; }
+.tips li + li { margin-top: 4px; }
+.tips b { color: var(--ink); }
+.subs-picked { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 3px 4px 3px 10px; font-size: 13px; }
+.pill small { color: var(--muted); font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill button { width: 22px; height: 22px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 15px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.pill button:hover { background: var(--line); color: var(--ink); }
+
+/* ---------- player ---------- */
+.stage { position: fixed; inset: 0; background: #000; overflow: hidden; container-type: size; }
+/* smaller player on the main screen */
+body.docked .start-card { width: min(920px, 100%); }
+.stage.docked { position: relative; inset: auto; width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; border: 1px solid var(--line); }
+.stage:fullscreen { border-radius: 0; border: 0; }
+.stage.docked .top { padding: 10px 12px 30px; }
+.stage.docked .bar { padding: 30px 12px 8px; gap: 4px; }
+.stage.docked #shareBtn, .stage.docked #countBtn, .stage.docked #keysBtn { display: none; }
+.stage.docked .vol { width: 72px; }
+.stage.docked .ib { width: 36px; height: 36px; font-size: 18px; }
+.stage.docked .bigplay { width: 72px; height: 72px; }
+.stage.docked .bigplay::after { border-left-width: 22px; border-top-width: 14px; border-bottom-width: 14px; margin-left: 6px; }
+.stage.docked .resume { bottom: 70px; }
+.stage.docked .toast { font-size: 14px; }
+#dock:empty { display: none; }
+#closeBtn { display: none; } .stage.docked #closeBtn { display: grid; }
+.stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.stage.hide-ui { cursor: none; }
+.subs { display: grid; justify-items: center; align-content: end; gap: .25em; padding: 0 6%; pointer-events: none; text-align: center; }
+.sub-stack { position: absolute; left: 0; right: 0; bottom: var(--sub-bottom, 8%); display: grid; gap: .35em; pointer-events: none; transition: bottom .2s; }
+.stage:not(.hide-ui):not(.sharing) .sub-stack { bottom: max(var(--sub-bottom, 8%), 96px); }
+.stage.docked:not(.hide-ui):not(.sharing) .sub-stack { bottom: max(var(--sub-bottom, 8%), 78px); }
+/* with a second language above, keep one line of room for the main one so the upper line doesn't jump in the gaps */
+.sub-stack.two .subs.primary { min-height: calc(var(--sub-size, 3.4cqh) * 1.45); }
+.subs.secondary.at-top { position: absolute; left: 0; right: 0; top: var(--sub-top, 6%); }
+.cue { font-size: var(--sub-size, 3.4cqh); font-weight: 600; line-height: 1.25; color: var(--sub-color, #fff); white-space: pre-line; max-width: 90%;
+  text-shadow: 0 0 .08em #000, 0 0 .18em #000, .05em .05em .12em #000; }
+.subs.boxed .cue { background: rgb(0 0 0 / var(--sub-bg, .55)); padding: .08em .45em .12em; border-radius: .25em; text-shadow: none; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.subs.secondary .cue { font-size: calc(var(--sub-size, 3.4cqh) * .82); color: var(--sub-color2, #ffe39a); }
+
+.top { position: absolute; left: 0; right: 0; top: 0; padding: 14px 18px 40px; display: flex; gap: 12px; align-items: center; background: linear-gradient(rgb(0 0 0 / .75), transparent); transition: opacity .25s; }
+.title { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 14px; background: linear-gradient(transparent, rgb(0 0 0 / .85)); transition: opacity .25s; display: grid; gap: 8px; }
+.stage.hide-ui .top, .stage.hide-ui .bar { opacity: 0; pointer-events: none; }
+/* the faded strips above the controls and below the title let clicks through to the film */
+.top, .bar { pointer-events: none; } .top > *, .bar > * { pointer-events: auto; } .stage.hide-ui .top > *, .stage.hide-ui .bar > * { pointer-events: none; }
+.seek { position: relative; height: 18px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.seek .track { position: absolute; left: 0; right: 0; height: 5px; border-radius: 3px; background: rgb(255 255 255 / .22); overflow: hidden; transition: height .1s; }
+.seek:hover .track { height: 8px; }
+.seek .buf { position: absolute; left: 0; top: 0; bottom: 0; background: rgb(255 255 255 / .25); }
+.seek .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.seek .knob { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; transform: translateX(-50%); box-shadow: 0 1px 4px rgb(0 0 0 / .5); }
+.seek .tip { position: absolute; bottom: 22px; transform: translateX(-50%); background: rgb(0 0 0 / .85); padding: 2px 8px; border-radius: 6px; font-size: 12px; font-variant-numeric: tabular-nums; pointer-events: none; display: none; }
+.seek:hover .tip { display: block; }
+.ctrls { display: flex; align-items: center; gap: 6px; }
+.ib { width: 40px; height: 40px; border: 0; background: none; border-radius: 10px; display: grid; place-items: center; color: #fff; font-size: 20px; flex: none; }
+.ib:hover { background: rgb(255 255 255 / .14); }
+.ib.on { color: var(--accent); }
+.ib svg { width: 22px; height: 22px; fill: currentColor; }
+.time { font-variant-numeric: tabular-nums; font-size: 14px; color: #ddd; margin: 0 6px; white-space: nowrap; }
+/* volume slider: drawn by hand so it looks the same in every browser; the filled part follows --v */
+.vol { -webkit-appearance: none; appearance: none; width: 90px; height: 18px; margin: 0 4px 0 0; background: none; cursor: pointer; flex: none; --v: 100%; }
+.vol::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--v), rgb(255 255 255 / .28) var(--v)); }
+.vol::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--v), rgb(255 255 255 / .28) var(--v)); }
+.vol::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 3px rgb(0 0 0 / .5); }
+.vol::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 3px rgb(0 0 0 / .5); }
+.spacer { flex: 1; }
+.chipbtn { border: 1px solid rgb(255 255 255 / .2); background: rgb(255 255 255 / .06); color: #fff; border-radius: 9px; padding: 5px 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.chipbtn:hover { background: rgb(255 255 255 / .14); }
+
+.panel { position: absolute; right: 16px; bottom: 96px; width: min(360px, calc(100vw - 32px)); max-height: calc(100cqh - 120px); overflow-y: auto; background: rgb(22 26 36 / .97); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 12px; box-shadow: 0 20px 50px rgb(0 0 0 / .6); backdrop-filter: blur(8px); }
+.panel { grid-template-columns: minmax(0, 1fr); overflow-x: hidden; }
+.stage.docked .panel { bottom: 78px; right: 10px; width: min(340px, calc(100% - 20px)); max-height: calc(100cqh - 100px); }
+.panel h4 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+.panel label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+.panel input[type="range"] { flex: 1; max-width: 170px; accent-color: var(--accent); }
+.panel select { -webkit-appearance: none; appearance: none; background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%239aa1b4' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center / 12px 8px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 32px 5px 12px; line-height: 1.3; max-width: 200px; min-width: 0; flex: 0 1 auto; text-overflow: ellipsis; cursor: pointer; }
+.panel select:hover { border-color: var(--faint); }
+.panel label > :first-child:not(input):not(select) { min-width: 0; }
+.trk { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); font-size: 13px; }
+.trk .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trk .nm small { color: var(--faint); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 3px 9px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--accent); color: var(--accent-ink); }
+.offset { display: flex; align-items: center; gap: 4px; }
+.offset button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 7px; padding: 2px 8px; font-size: 13px; }
+.offset span { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+.small { font-size: 12.5px; color: var(--muted); margin: 0; }
+
+.toast { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); background: rgb(0 0 0 / .78); color: #fff; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 16px; pointer-events: none; transition: opacity .3s; }
+.warn { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); width: min(560px, calc(100vw - 32px)); background: #3a1c22; border: 1px solid #7a2f3c; color: #ffd6dd; padding: 12px 14px; border-radius: 14px; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; z-index: 5; }
+.warn b { color: #fff; }
+.warn button { margin-left: auto; border: 0; background: none; color: #ffd6dd; font-size: 18px; line-height: 1; }
+.count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 22cqh; font-weight: 800; color: #fff; text-shadow: 0 0 40px color-mix(in srgb, var(--accent) 70%, transparent); background: rgb(0 0 0 / .45); pointer-events: none; }
+.bigplay { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--accent) 92%, transparent); display: grid; place-items: center; box-shadow: 0 10px 40px rgb(0 0 0 / .5); }
+.bigplay::after { content: ""; border-left: 30px solid var(--accent-ink); border-top: 19px solid transparent; border-bottom: 19px solid transparent; margin-left: 8px; }
+.resume { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); background: rgb(22 26 36 / .96); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.keys { position: absolute; inset: 0; background: rgb(0 0 0 / .7); display: grid; place-items: center; z-index: 8; }
+.keys-box { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 22px; width: min(520px, calc(100vw - 32px)); }
+.keys-box h3 { margin: 0 0 10px; }
+.keys-box table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.keys-box td { padding: 4px 0; } .keys-box td:first-child { width: 42%; }
+kbd { font: 600 12px var(--font); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; background: var(--bg); }
+@media (max-width: 700px) { .vol { width: 60px; } .time .dur { display: none; } .panel { bottom: 90px; } }
+@font-face { font-family: "Departure Mono"; font-style: normal; font-display: swap; font-weight: 400; src: url(fonts/departure-mono-regular.woff2) format("woff2"); }
+
+/* pixel titles */
+h1, h2, h3, h4, .brand, .title, .drop > b { font-family: "Departure Mono", "JetBrains Mono Variable", ui-monospace, monospace; font-weight: 400; letter-spacing: -0.02em; }
+.brand .acct-pill, .brand .acct-pill *, .brand .hub-link { font-family: var(--font); letter-spacing: normal; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-latin-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Rubik Variable"; font-style: normal; font-display: swap; font-weight: 300 900; src: url(fonts/rubik-cyrillic-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-latin-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-cyrillic-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "JetBrains Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/jetbrains-mono-cyrillic-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+</style>
+<script src="config.js"></script>
+<script src="../media-log/config.js" onerror="void 0"></script>
+<style>html.acc-out body > :not(.acc-gate):not(script):not(style) { visibility: hidden; }</style>
+<script>// with sign-in on, keep the page hidden from the very first paint until we know who's here
+(function () {
+  var ok = function (f) { return f && f.apiKey && !/^PASTE|^test$/i.test(f.apiKey) && f.projectId; };
+  var c = window.NOTEBOOK_CONFIG || {};
+  if (c.requireSignIn && (ok(c.firebase) || ok((window.MEDIA_LOG_CONFIG || {}).firebase))) document.documentElement.classList.add("acc-out");
+})();</script>
+</head>
+<body>
+
+<!-- start: pick a film -->
+<div class="start" id="start">
+  <div class="start-card">
+    <div class="brand"><span class="logo" data-icon="movie"></span>Movie night<a href="/" id="hubLink" class="hub-link" hidden>← All our tools</a><span id="accSlot"></span></div>
+    <div id="dock"></div>
+    <label class="drop" id="drop">
+      <span class="big">🎬</span>
+      <b>Drop a video here</b>
+      <p>MP4, MOV, WebM (MKV works if the browser can play it). Subtitles too: .srt, .vtt or .ass</p>
+      <span class="row" style="justify-content:center;margin-top:8px">
+        <span class="btn primary">Choose a video…</span>
+      </span>
+      <input type="file" id="pickVideo" accept="video/*,.mkv,.mov,.m4v,.avi" hidden>
+    </label>
+    <div class="row">
+      <button class="btn" id="pickSubsBtn" type="button">＋ Add subtitles</button>
+      <div class="subs-picked" id="subsPicked"></div>
+      <input type="file" id="pickSubs" accept=".srt,.vtt,.ass,.ssa,text/vtt" multiple hidden>
+    </div>
+    <div class="tips">
+      <h3>How to share the film</h3>
+      <ol>
+        <li>Whoever has the film opens this page in <b>Chrome or Edge</b> on a computer (Mac, Windows or Linux) and loads it.</li>
+        <li>In the call, share your screen and pick <b>this tab</b> (in Chrome: “Chrome Tab”).</li>
+        <li>Turn on <b>“Also share tab audio”</b>, otherwise the other person gets picture without sound.</li>
+        <li>Press <b>Share mode</b> (or <kbd>T</kbd>): everything except the film and subtitles disappears, so that's all they see.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- player -->
+<div class="stage" id="stage" hidden>
+  <video id="video" playsinline preload="auto"></video>
+  <div class="subs secondary at-top" id="subs2"></div>
+  <div class="sub-stack" id="subStack"><div class="subs primary boxed" id="subs1"></div></div>
+  <button class="bigplay" id="bigplay" type="button" aria-label="Play"></button>
+  <div class="count" id="count" hidden></div>
+  <div class="toast" id="toast" style="opacity:0"></div>
+  <div class="warn" id="warn" hidden></div>
+  <div class="resume" id="resume" hidden></div>
+
+  <div class="top">
+    <button class="ib" id="backBtn" type="button" title="Smaller player (main screen)" aria-label="Smaller player">←</button>
+    <div class="title" id="title"></div>
+    <button class="ib" id="closeBtn" type="button" title="Close film" aria-label="Close film">✕</button>
+    <button class="chipbtn" id="shareBtn" type="button" title="Hide everything except the film (T)">⛶ Share mode</button>
+  </div>
+
+  <div class="bar">
+    <div class="seek" id="seek" aria-label="Seek" role="slider" tabindex="0">
+      <div class="track"><div class="buf" id="buf"></div><div class="fill" id="fill"></div></div>
+      <div class="knob" id="knob"></div>
+      <div class="tip" id="tip">0:00</div>
+    </div>
+    <div class="ctrls">
+      <button class="ib" id="playBtn" type="button" aria-label="Play/pause (Space)"></button>
+      <button class="ib" id="back10" type="button" title="Back 10 s (←)" aria-label="Back 10 seconds">↺</button>
+      <button class="ib" id="fwd10" type="button" title="Forward 10 s (→)" aria-label="Forward 10 seconds">↻</button>
+      <button class="ib" id="muteBtn" type="button" aria-label="Mute (M)">🔊</button>
+      <input class="vol" id="vol" type="range" min="0" max="1" step="0.02" value="1" aria-label="Volume">
+      <span class="time"><span id="cur">0:00</span><span class="dur"> / <span id="dur">0:00</span></span></span>
+      <span class="spacer"></span>
+      <button class="chipbtn" id="countBtn" type="button" title="Count down 3-2-1, then play">3-2-1 ▶</button>
+      <button class="ib" id="ccBtn" type="button" title="Subtitles (S toggles, C opens settings)" aria-label="Subtitles">CC</button>
+      <button class="ib" id="setBtn" type="button" title="Speed and more" aria-label="Settings">⚙</button>
+      <button class="ib" id="keysBtn" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">⌨</button>
+      <button class="ib" id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen">⤢</button>
+    </div>
+  </div>
+
+  <div class="panel" id="ccPanel" hidden></div>
+  <div class="panel" id="setPanel" hidden></div>
+  <div class="keys" id="keys" hidden>
+    <div class="keys-box">
+      <h3>Keyboard shortcuts</h3>
+      <table>
+        <tr><td><kbd>Space</kbd> / <kbd>K</kbd></td><td>Play / pause</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Back / forward 10 s (hold Shift: 2 s)</td></tr>
+        <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Volume</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Mute</td></tr>
+        <tr><td><kbd>F</kbd></td><td>Full screen</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Share mode on/off</td></tr>
+        <tr><td><kbd>S</kbd> / <kbd>C</kbd></td><td>Subtitles on/off / subtitle settings</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>H</kbd></td><td>Subtitles earlier / later by 0.1 s (Shift: 1 s)</td></tr>
+        <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>Smaller / bigger subtitles</td></tr>
+        <tr><td><kbd>&lt;</kbd> <kbd>&gt;</kbd></td><td>Slower / faster</td></tr>
+        <tr><td><kbd>?</kbd></td><td>This list</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>// Built-in subtitles for Movie night.
+// Reads the text subtitle tracks stored inside a video file (MKV/WebM and MP4/MOV/M4V), straight from
+// the computer's disk: nothing is uploaded. Picture-based subtitles (Blu-ray PGS, DVD VobSub) can't be
+// read as text; they are reported so the player can say so.
+//
+//   const res = await MNEmbedded.read(file, { onProgress(fraction) {}, cancelled() { return false } });
+//   res.tracks      → [{ lang, title, codec, forced, def, kind: "text" | "ass", cues: [{ s, e, text }] }]
+//   res.unsupported → [{ lang, title, codec }]
+window.MNEmbedded = (() => {
+  "use strict";
+
+  /* ---------- reading the file in pieces ---------- */
+  class Reader {
+    constructor(file, chunk) { this.file = file; this.size = file.size; this.chunk = chunk; this.start = 0; this.buf = new Uint8Array(0); }
+    // bytes [pos, pos+n) (fewer at the end of the file), as [buffer, offset]
+    async at(pos, n) {
+      if (pos < this.start || pos + n > this.start + this.buf.length) {
+        const len = Math.max(0, Math.min(this.size - pos, Math.max(n, this.chunk)));
+        this.buf = new Uint8Array(await this.file.slice(pos, pos + len).arrayBuffer());
+        this.start = pos;
+      }
+      return [this.buf, pos - this.start];
+    }
+    async bytes(pos, n) { const [b, o] = await this.at(pos, n); return b.subarray(o, o + n); }
+  }
+  const utf8 = new TextDecoder("utf-8");
+  const Cancelled = new Error("cancelled");
+
+  /* ---------- language names ---------- */
+  const ISO3 = { eng: "en", rus: "ru", ukr: "uk", jpn: "ja", ger: "de", deu: "de", fre: "fr", fra: "fr", spa: "es", ita: "it", kor: "ko", chi: "zh", zho: "zh", por: "pt", pol: "pl", dut: "nl", nld: "nl", swe: "sv", fin: "fi", nor: "no", nob: "nb", dan: "da", cze: "cs", ces: "cs", tur: "tr", ara: "ar", heb: "he", hin: "hi", tha: "th", vie: "vi", ind: "id", hun: "hu", gre: "el", ell: "el", rum: "ro", ron: "ro", bul: "bg", srp: "sr", hrv: "hr", bel: "be", kaz: "kk", geo: "ka", kat: "ka", arm: "hy", hye: "hy", may: "ms", msa: "ms", fil: "fil", tgl: "tl", per: "fa", fas: "fa", slo: "sk", slk: "sk", slv: "sl", lit: "lt", lav: "lv", est: "et", cat: "ca", baq: "eu", eus: "eu", glg: "gl", ice: "is", isl: "is", lat: "la", tam: "ta", tel: "te", ben: "bn", urd: "ur", aze: "az", uzb: "uz", mon: "mn" };
+  let names = null;
+  try { names = new Intl.DisplayNames(["en"], { type: "language" }); } catch {}
+  function langName(code) {
+    if (!code) return "";
+    let c = String(code).trim().replace(/_/g, "-");
+    const low = c.toLowerCase();
+    if (!low || low === "und" || low === "mul" || low === "zxx" || low === "mis") return "";
+    if (ISO3[low]) c = ISO3[low];
+    try { const n = names && names.of(c); if (n && n.toLowerCase() !== c.toLowerCase()) return n; } catch {}
+    return c;
+  }
+
+  /* ---------- Matroska (MKV, WebM) ---------- */
+  const M = {
+    EBML: 0x1a45dfa3, Segment: 0x18538067, SeekHead: 0x114d9b74, Seek: 0x4dbb, SeekID: 0x53ab, SeekPosition: 0x53ac,
+    Info: 0x1549a966, TimestampScale: 0x2ad7b1, Tracks: 0x1654ae6b, TrackEntry: 0xae, TrackNumber: 0xd7, TrackType: 0x83,
+    CodecID: 0x86, CodecPrivate: 0x63a2, Language: 0x22b59c, LanguageBCP47: 0x22b59d, Name: 0x536e, FlagDefault: 0x88, FlagForced: 0x55aa,
+    ContentEncodings: 0x6d80, ContentEncoding: 0x6240, ContentCompression: 0x5034, ContentCompAlgo: 0x4254, ContentCompSettings: 0x4255, ContentEncryption: 0x5035,
+    Cluster: 0x1f43b675, Timestamp: 0xe7, SimpleBlock: 0xa3, BlockGroup: 0xa0, Block: 0xa1, BlockDuration: 0x9b,
+    Cues: 0x1c53bb6b, CuePoint: 0xbb, CueTime: 0xb3, CueTrackPositions: 0xb7, CueTrack: 0xf7, CueClusterPosition: 0xf1, CueRelativePosition: 0xf0, CueDuration: 0xb2,
+    Chapters: 0x1043a770, Tags: 0x1254c367, Attachments: 0x1941a469,
+  };
+  const LEVEL1 = new Set([M.SeekHead, M.Info, M.Tracks, M.Cluster, M.Cues, M.Chapters, M.Tags, M.Attachments]);
+
+  // EBML variable-length number; ids keep their marker bit, sizes don't. null if it runs past the bytes we have.
+  function vint(b, o, isId) {
+    const first = b[o];
+    if (first === undefined || first === 0) return null;
+    let len = 1, mask = 0x80;
+    while (!(first & mask)) { len++; mask >>= 1; }
+    if (len > (isId ? 4 : 8) || o + len > b.length) return null;
+    let v = isId ? first : first & (mask - 1), ones = (first & (mask - 1)) === mask - 1;
+    for (let i = 1; i < len; i++) { v = v * 256 + b[o + i]; if (b[o + i] !== 0xff) ones = false; }
+    return { v, len, unknown: !isId && ones };
+  }
+  const uint = (b) => { let v = 0; for (const x of b) v = v * 256 + x; return v; };
+  const sint16 = (b, o) => { const v = (b[o] << 8) | b[o + 1]; return v & 0x8000 ? v - 0x10000 : v; };
+  const str = (b) => utf8.decode(b).replace(/\0+$/, "");
+
+  // element header at a position in the file
+  async function head(r, pos) {
+    const [b, o] = await r.at(pos, 12);
+    const id = vint(b, o, true); if (!id) return null;
+    const sz = vint(b, o + id.len, false); if (!sz) return null;
+    return { id: id.v, size: sz.unknown ? -1 : sz.v, data: pos + id.len + sz.len };
+  }
+  // children of an element already in memory
+  function* kids(b, start, end) {
+    let p = start;
+    while (p < end) {
+      const id = vint(b, p, true); if (!id) return;
+      const sz = vint(b, p + id.len, false); if (!sz) return;
+      const data = p + id.len + sz.len, size = sz.unknown ? end - data : sz.v;
+      yield { id: id.v, data, size, b: b.subarray(data, Math.min(end, data + size)) };
+      p = data + size;
+    }
+  }
+
+  async function readMatroska(file, { onProgress, cancelled }) {
+    const r = new Reader(file, 1 << 18);
+    const top = await head(r, 0);
+    if (!top || top.id !== M.EBML) return null;
+    const seg = await head(r, top.data + top.size);
+    if (!seg || seg.id !== M.Segment) return null;
+    const segStart = seg.data, segEnd = seg.size < 0 ? file.size : Math.min(file.size, seg.data + seg.size);
+
+    let scale = 1e6, tracksBytes = null, cuesBytes = null, firstCluster = -1;
+    const seekTo = {};
+    const parseSeekHead = (b) => {
+      for (const s of kids(b, 0, b.length)) if (s.id === M.Seek) {
+        let id = 0, at = -1;
+        for (const k of kids(s.b, 0, s.b.length)) { if (k.id === M.SeekID) id = uint(k.b); if (k.id === M.SeekPosition) at = uint(k.b); }
+        if (id && at >= 0 && !(id in seekTo)) seekTo[id] = segStart + at;
+      }
+    };
+    const readWhole = async (h, cap) => (h.size < 0 || h.size > cap ? null : await r.bytes(h.data, h.size));
+
+    // walk the level-1 elements up to the first cluster
+    for (let pos = segStart; pos < segEnd;) {
+      const h = await head(r, pos);
+      if (!h) break;
+      if (h.id === M.Cluster) { firstCluster = pos; break; }
+      if (h.id === M.SeekHead) { const b = await readWhole(h, 1 << 20); if (b) parseSeekHead(b); }
+      else if (h.id === M.Info) { const b = await readWhole(h, 1 << 20); if (b) for (const k of kids(b, 0, b.length)) if (k.id === M.TimestampScale) scale = uint(k.b) || 1e6; }
+      else if (h.id === M.Tracks) tracksBytes = await readWhole(h, 8 << 20);
+      else if (h.id === M.Cues) cuesBytes = await readWhole(h, 64 << 20);
+      if (h.size < 0) break;
+      pos = h.data + h.size;
+    }
+    // a second SeekHead (often at the end) and anything only reachable through it
+    if (seekTo[M.SeekHead]) { const h = await head(r, seekTo[M.SeekHead]); if (h && h.id === M.SeekHead) { const b = await readWhole(h, 1 << 20); if (b) parseSeekHead(b); } }
+    if (!tracksBytes && seekTo[M.Tracks]) { const h = await head(r, seekTo[M.Tracks]); if (h && h.id === M.Tracks) tracksBytes = await readWhole(h, 8 << 20); }
+    if (!cuesBytes && seekTo[M.Cues]) { const h = await head(r, seekTo[M.Cues]); if (h && h.id === M.Cues) cuesBytes = await readWhole(h, 64 << 20); }
+    if (firstCluster < 0 && seekTo[M.Cluster]) firstCluster = seekTo[M.Cluster];
+    if (!tracksBytes) return { tracks: [], unsupported: [] };
+
+    // which tracks are subtitles
+    const subs = new Map(), unsupported = [];
+    for (const t of kids(tracksBytes, 0, tracksBytes.length)) {
+      if (t.id !== M.TrackEntry) continue;
+      const tr = { num: 0, type: 0, codec: "", priv: null, lang: "eng", bcp: "", title: "", def: true, forced: false, comp: null, encrypted: false };
+      for (const k of kids(t.b, 0, t.b.length)) {
+        if (k.id === M.TrackNumber) tr.num = uint(k.b);
+        else if (k.id === M.TrackType) tr.type = uint(k.b);
+        else if (k.id === M.CodecID) tr.codec = str(k.b);
+        else if (k.id === M.CodecPrivate) tr.priv = k.b;
+        else if (k.id === M.Language) tr.lang = str(k.b);
+        else if (k.id === M.LanguageBCP47) tr.bcp = str(k.b);
+        else if (k.id === M.Name) tr.title = str(k.b);
+        else if (k.id === M.FlagDefault) tr.def = !!uint(k.b);
+        else if (k.id === M.FlagForced) tr.forced = !!uint(k.b);
+        else if (k.id === M.ContentEncodings) {
+          for (const e of kids(k.b, 0, k.b.length)) if (e.id === M.ContentEncoding) for (const c of kids(e.b, 0, e.b.length)) {
+            if (c.id === M.ContentEncryption) tr.encrypted = true;
+            if (c.id === M.ContentCompression) {
+              const comp = { algo: 0, settings: new Uint8Array(0) };
+              for (const x of kids(c.b, 0, c.b.length)) { if (x.id === M.ContentCompAlgo) comp.algo = uint(x.b); if (x.id === M.ContentCompSettings) comp.settings = x.b.slice(); }
+              tr.comp = comp;
+            }
+          }
+        }
+      }
+      if (tr.type !== 0x11) continue;
+      const kind = /^S_TEXT\/(UTF8|ASCII|WEBVTT)$|^D_WEBVTT\//.test(tr.codec) ? "text" : /^S_(TEXT\/)?(ASS|SSA)$/.test(tr.codec) ? "ass" : null;
+      const info = { lang: langName(tr.bcp || tr.lang), title: tr.title, codec: tr.codec };
+      if (!kind || tr.encrypted || (tr.comp && tr.comp.algo !== 0 && tr.comp.algo !== 3)) { unsupported.push(info); continue; }
+      subs.set(tr.num, { ...info, num: tr.num, kind, forced: tr.forced, def: tr.def, comp: tr.comp, raw: [] });
+    }
+    if (!subs.size) return { tracks: [], unsupported };
+
+    // a block's bytes → one subtitle line
+    const takeBlock = (data, clusterTs, dur) => {
+      const tn = vint(data, 0, false); if (!tn) return;
+      const t = subs.get(tn.v); if (!t) return;
+      const rel = sint16(data, tn.len), flags = data[tn.len + 2];
+      if (flags & 0x06) return; // laced blocks don't happen with subtitles; skip rather than misread
+      t.raw.push({ ts: clusterTs + rel, dur, payload: data.slice(tn.len + 3) });
+    };
+
+    // fast way: the index (Cues) points at every subtitle block, when the file has one
+    const cueList = [];
+    if (cuesBytes) {
+      for (const cp of kids(cuesBytes, 0, cuesBytes.length)) {
+        if (cp.id !== M.CuePoint) continue;
+        for (const ctp of kids(cp.b, 0, cp.b.length)) {
+          if (ctp.id !== M.CueTrackPositions) continue;
+          let track = 0, cluster = -1, relPos = -1;
+          for (const k of kids(ctp.b, 0, ctp.b.length)) { if (k.id === M.CueTrack) track = uint(k.b); if (k.id === M.CueClusterPosition) cluster = uint(k.b); if (k.id === M.CueRelativePosition) relPos = uint(k.b); }
+          if (subs.has(track) && cluster >= 0 && relPos >= 0) cueList.push({ track, cluster: segStart + cluster, relPos });
+        }
+      }
+    }
+    const indexed = new Set(cueList.map((c) => c.track));
+    if (indexed.size === subs.size && cueList.length) {
+      r.chunk = 1 << 16;
+      const clusterTs = new Map();
+      cueList.sort((a, b) => a.cluster + a.relPos - (b.cluster + b.relPos));
+      let n = 0;
+      for (const c of cueList) {
+        if (cancelled()) throw Cancelled;
+        if (++n % 25 === 0) onProgress(n / cueList.length);
+        const ch = await head(r, c.cluster);
+        if (!ch || ch.id !== M.Cluster) continue;
+        if (!clusterTs.has(c.cluster)) {
+          let ts = 0;
+          const [b, o] = await r.at(ch.data, 32);
+          for (const k of kids(b.subarray(o, o + 32), 0, Math.min(32, b.length - o))) { if (k.id === M.Timestamp) { ts = uint(k.b); break; } }
+          clusterTs.set(c.cluster, ts);
+        }
+        const bh = await head(r, ch.data + c.relPos);
+        if (!bh || bh.size < 0 || bh.size > 1 << 20) continue;
+        const data = await r.bytes(bh.data, bh.size);
+        if (bh.id === M.SimpleBlock) takeBlock(data, clusterTs.get(c.cluster), null);
+        else if (bh.id === M.BlockGroup) {
+          let blk = null, dur = null;
+          for (const k of kids(data, 0, data.length)) { if (k.id === M.Block) blk = k.b; if (k.id === M.BlockDuration) dur = uint(k.b); }
+          if (blk) takeBlock(blk, clusterTs.get(c.cluster), dur);
+        }
+      }
+    } else if (firstCluster >= 0) {
+      // slow way: walk every cluster, skipping over video and audio without reading it into memory
+      r.chunk = 8 << 20;
+      let lastTick = 0;
+      for (let pos = firstCluster; pos < segEnd;) {
+        if (cancelled()) throw Cancelled;
+        if (pos - lastTick > 32 << 20) { lastTick = pos; onProgress(pos / file.size); }
+        const h = await head(r, pos);
+        if (!h) break;
+        if (h.id !== M.Cluster) { if (h.size < 0) break; pos = h.data + h.size; continue; }
+        const end = h.size < 0 ? segEnd : h.data + h.size;
+        let ts = 0, p = h.data;
+        while (p < end) {
+          const k = await head(r, p);
+          if (!k) { p = end; break; }
+          if (h.size < 0 && LEVEL1.has(k.id)) break; // a cluster of unknown size ends where the next level-1 element starts
+          if (k.size < 0) { p = end; break; }
+          if (k.id === M.Timestamp) ts = uint(await r.bytes(k.data, k.size));
+          else if (k.id === M.SimpleBlock) {
+            const [b, o] = await r.at(k.data, 4);
+            const tn = vint(b, o, false);
+            if (tn && subs.has(tn.v)) takeBlock(await r.bytes(k.data, k.size), ts, null);
+          } else if (k.id === M.BlockGroup) {
+            // the Block usually comes first; peek at its track number before reading anything else
+            const inner = await head(r, k.data);
+            let isSub = false;
+            if (inner && inner.id === M.Block) { const [b, o] = await r.at(inner.data, 4); const tn = vint(b, o, false); isSub = !!(tn && subs.has(tn.v)); }
+            else isSub = k.size < 1 << 16; // unusual order: small groups are worth a look
+            if (isSub && k.size < 1 << 20) {
+              const data = await r.bytes(k.data, k.size);
+              let blk = null, dur = null;
+              for (const x of kids(data, 0, data.length)) { if (x.id === M.Block) blk = x.b; if (x.id === M.BlockDuration) dur = uint(x.b); }
+              if (blk) takeBlock(blk, ts, dur);
+            }
+          }
+          p = k.data + k.size;
+        }
+        pos = p > h.data ? (h.size < 0 ? p : end) : end;
+      }
+    }
+
+    // payloads → lines of text
+    const tracks = [];
+    for (const t of subs.values()) {
+      const cues = [];
+      for (const x of t.raw) {
+        let bytes = x.payload;
+        if (t.comp && t.comp.algo === 3) { const j = new Uint8Array(t.comp.settings.length + bytes.length); j.set(t.comp.settings); j.set(bytes, t.comp.settings.length); bytes = j; }
+        else if (t.comp && t.comp.algo === 0) { try { bytes = await inflate(bytes); } catch { continue; } }
+        let text = utf8.decode(bytes).replace(/\0+$/, "").replace(/\r\n?/g, "\n");
+        if (t.kind === "ass") text = text.split(",").slice(8).join(","); // ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+        const s = (x.ts * scale) / 1e9, e = x.dur != null ? ((x.ts + x.dur) * scale) / 1e9 : null;
+        if (text.trim()) cues.push({ s, e, text });
+      }
+      finish(cues);
+      if (cues.length) tracks.push({ lang: t.lang, title: t.title, codec: t.codec, forced: t.forced, def: t.def, kind: t.kind, cues });
+    }
+    return { tracks, unsupported };
+  }
+
+  async function inflate(bytes) {
+    const ds = new DecompressionStream("deflate");
+    const out = new Response(new Blob([bytes]).stream().pipeThrough(ds));
+    return new Uint8Array(await out.arrayBuffer());
+  }
+  // sort; lines with no end time last until the next line (at most 6 s)
+  function finish(cues) {
+    cues.sort((a, b) => a.s - b.s);
+    for (let i = 0; i < cues.length; i++) if (cues[i].e == null || !(cues[i].e > cues[i].s)) {
+      const next = cues.slice(i + 1).find((c) => c.s > cues[i].s);
+      cues[i].e = Math.min(cues[i].s + 6, next ? next.s : Infinity);
+    }
+  }
+
+  /* ---------- MP4 / MOV ---------- */
+  const MAC_LANG = ["en", "fr", "de", "it", "nl", "sv", "es", "da", "pt", "no", "he", "ja", "ar", "fi", "el", "is", "mt", "tr", "hr", "zh-Hant", "ur", "hi", "th", "ko", "lt", "pl", "hu", "et", "lv", "se", "fo", "fa", "ru", "zh-Hans", "nl", "ga", "sq", "ro", "cs", "sk", "sl", "yi", "sr", "mk", "bg", "uk", "be", "uz", "kk", "az", "az", "hy", "ka", "mo", "ky", "tg", "tk", "mn", "mn", "ps", "ku", "ks", "sd", "bo", "ne", "sa", "mr", "bn", "as", "gu", "pa", "or", "ml", "kn", "ta", "te", "si", "my", "km", "lo", "vi", "id", "tl", "ms", "ms", "am", "ti", "om", "so", "sw", "rw", "rn", "ny", "mg", "eo"];
+  async function readMp4(file, { onProgress, cancelled }) {
+    const r = new Reader(file, 1 << 16);
+    // find the moov box among the top-level boxes (it can be at the start or the end)
+    let moov = null, pos = 0, sawFtyp = false;
+    while (pos + 8 <= file.size) {
+      const h = await r.bytes(pos, 16);
+      let size = ((h[0] << 24) >>> 0) + (h[1] << 16) + (h[2] << 8) + h[3], hl = 8;
+      const type = String.fromCharCode(h[4], h[5], h[6], h[7]);
+      if (size === 1) { size = uint(h.subarray(8, 16)); hl = 16; } else if (size === 0) size = file.size - pos;
+      if (!/^[\x20-\x7e]{4}$/.test(type) || size < hl) break;
+      if (pos === 0 && type !== "ftyp" && type !== "moov" && type !== "wide" && type !== "free" && type !== "mdat" && type !== "skip") return null;
+      if (type === "ftyp") sawFtyp = true;
+      if (type === "moov") { if (size > 128 << 20) return null; moov = await r.bytes(pos + hl, size - hl); break; }
+      pos += size;
+    }
+    if (!moov) return sawFtyp ? { tracks: [], unsupported: [] } : null;
+
+    const boxes = function* (b, start = 0, end = b.length) {
+      let p = start;
+      while (p + 8 <= end) {
+        let size = ((b[p] << 24) >>> 0) + (b[p + 1] << 16) + (b[p + 2] << 8) + b[p + 3], hl = 8;
+        const type = String.fromCharCode(b[p + 4], b[p + 5], b[p + 6], b[p + 7]);
+        if (size === 1) { size = uint(b.subarray(p + 8, p + 16)); hl = 16; } else if (size === 0) size = end - p;
+        if (size < hl || p + size > end) return;
+        yield { type, b: b.subarray(p + hl, p + size) };
+        p += size;
+      }
+    };
+    const find = (b, ...path) => { let cur = b; for (const t of path) { let hit = null; for (const x of boxes(cur)) if (x.type === t) { hit = x.b; break; } if (!hit) return null; cur = hit; } return cur; };
+    const u32 = (b, o) => ((b[o] << 24) >>> 0) + (b[o + 1] << 16) + (b[o + 2] << 8) + b[o + 3];
+
+    const mvhd = find(moov, "mvhd");
+    const movieScale = (mvhd && u32(mvhd, mvhd[0] === 1 ? 20 : 12)) || 1000;
+    const found = [], unsupported = [];
+    for (const trak of boxes(moov)) {
+      if (trak.type !== "trak") continue;
+      const mdia = find(trak.b, "mdia"); if (!mdia) continue;
+      const hdlr = find(mdia, "hdlr"); if (!hdlr) continue;
+      const handler = String.fromCharCode(...hdlr.subarray(8, 12));
+      if (!["sbtl", "text", "subt"].includes(handler)) continue;
+      const mdhd = find(mdia, "mdhd"); if (!mdhd) continue;
+      const v1 = mdhd[0] === 1;
+      const timescale = u32(mdhd, v1 ? 20 : 12) || 1000;
+      const lp = (mdhd[v1 ? 32 : 20] << 8) | mdhd[v1 ? 33 : 21];
+      // below 0x400 it's an old QuickTime (Macintosh) language number, otherwise three packed letters
+      let lang = lp < 0x400 ? MAC_LANG[lp] || "" : lp === 0x7fff ? "" : String.fromCharCode(((lp >> 10) & 31) + 0x60, ((lp >> 5) & 31) + 0x60, (lp & 31) + 0x60);
+      const elng = find(mdia, "elng"); if (elng) lang = str(elng.subarray(4));
+      let title = "";
+      const nameBox = find(trak.b, "udta", "name"); if (nameBox) title = str(nameBox);
+      const stbl = find(mdia, "minf", "stbl"); if (!stbl) continue;
+      const stsd = find(stbl, "stsd"); if (!stsd) continue;
+      const entry = String.fromCharCode(...stsd.subarray(12, 16));
+      const info = { lang: langName(lang), title, codec: entry };
+      if (!["tx3g", "text", "wvtt"].includes(entry)) { unsupported.push(info); continue; }
+      // sample table → where each line sits in the file and when it shows
+      const stts = find(stbl, "stts"), stsc = find(stbl, "stsc"), stsz = find(stbl, "stsz"), stco = find(stbl, "stco"), co64 = find(stbl, "co64");
+      if (!stts || !stsc || !stsz || !(stco || co64)) continue;
+      const times = [];
+      for (let i = 0, n = u32(stts, 4), t = 0; i < n; i++) { const cnt = u32(stts, 8 + i * 8), d = u32(stts, 12 + i * 8); for (let j = 0; j < cnt; j++) { times.push([t, d]); t += d; } }
+      const fixed = u32(stsz, 4), count = u32(stsz, 8);
+      const sizes = []; for (let i = 0; i < count; i++) sizes.push(fixed || u32(stsz, 12 + i * 4));
+      const chunks = []; if (co64) for (let i = 0, n = u32(co64, 4); i < n; i++) chunks.push(uint(co64.subarray(8 + i * 8, 16 + i * 8))); else for (let i = 0, n = u32(stco, 4); i < n; i++) chunks.push(u32(stco, 8 + i * 4));
+      const runs = []; for (let i = 0, n = u32(stsc, 4); i < n; i++) runs.push([u32(stsc, 8 + i * 12), u32(stsc, 12 + i * 12)]);
+      const samples = [];
+      for (let ci = 0, si = 0, ri = 0; ci < chunks.length && si < count; ci++) {
+        while (ri + 1 < runs.length && runs[ri + 1][0] <= ci + 1) ri++;
+        let off = chunks[ci];
+        for (let k = 0; k < (runs[ri] ? runs[ri][1] : 1) && si < count; k++, si++) { samples.push({ off, size: sizes[si], t: times[si] }); off += sizes[si]; }
+      }
+      let shift = 0;
+      const elst = find(trak.b, "edts", "elst");
+      if (elst) {
+        const ev1 = elst[0] === 1, n = u32(elst, 4), w = ev1 ? 20 : 12;
+        for (let i = 0; i < n; i++) {
+          const o = 8 + i * w;
+          const dur = ev1 ? uint(elst.subarray(o, o + 8)) : u32(elst, o);
+          const mt = ev1 ? uint(elst.subarray(o + 8, o + 16)) : u32(elst, o + 4);
+          const empty = ev1 ? mt === 2 ** 64 - 1 || mt >= 2 ** 63 : mt === 0xffffffff;
+          if (empty) { shift += dur / movieScale; continue; }
+          shift -= mt / timescale; break;
+        }
+      }
+      found.push({ ...info, entry, timescale, samples, shift });
+    }
+
+    const total = found.reduce((n, t) => n + t.samples.length, 0) || 1;
+    let done = 0;
+    const tracks = [];
+    for (const t of found) {
+      const cues = [];
+      for (const smp of t.samples) {
+        if (cancelled()) throw Cancelled;
+        if (++done % 50 === 0) onProgress(done / total);
+        if (!smp.t || smp.size < 2 || smp.size > 1 << 16) continue;
+        const b = await r.bytes(smp.off, smp.size);
+        let text = "";
+        if (t.entry === "wvtt") {
+          for (const x of boxes(b)) if (x.type === "vttc") { const p = find(x.b, "payl"); if (p) text += (text ? "\n" : "") + utf8.decode(p); }
+        } else {
+          const len = (b[0] << 8) | b[1];
+          const body = b.subarray(2, 2 + len);
+          const wide = body[0] === 0xfe && body[1] === 0xff;
+          text = wide ? new TextDecoder("utf-16be").decode(body.subarray(2)) : utf8.decode(body);
+          if (!wide && b.length > 2 + len) text = tx3gStyles(text, body, b.subarray(2 + len), boxes);
+        }
+        text = text.replace(/\r\n?/g, "\n");
+        if (text.trim()) cues.push({ s: smp.t[0] / t.timescale + t.shift, e: (smp.t[0] + smp.t[1]) / t.timescale + t.shift, text });
+      }
+      finish(cues);
+      if (cues.length) tracks.push({ lang: t.lang, title: t.title, codec: t.entry, forced: false, def: false, kind: "text", cues });
+    }
+    return { tracks, unsupported };
+  }
+
+  // 3GPP timed text keeps styling in a 'styl' box after the text: ranges with bold (1), italic (2), underline (4)
+  function tx3gStyles(text, body, rest, boxes) {
+    let styl = null;
+    for (const x of boxes(rest)) if (x.type === "styl") styl = x.b;
+    if (!styl) return text;
+    // ranges count characters; map them to positions in the decoded string
+    const chars = Array.from(text), n = (styl[0] << 8) | styl[1], marks = [];
+    for (let i = 0; i < n; i++) {
+      const o = 2 + i * 12; if (o + 12 > styl.length) break;
+      const a = (styl[o] << 8) | styl[o + 1], z = (styl[o + 2] << 8) | styl[o + 3], face = styl[o + 6];
+      const tags = [face & 1 && "b", face & 2 && "i", face & 4 && "u"].filter(Boolean);
+      if (tags.length && z > a) marks.push({ a: Math.min(a, chars.length), z: Math.min(z, chars.length), tags });
+    }
+    if (!marks.length) return text;
+    const esc = (c) => (c === "<" ? "‹" : c === ">" ? "›" : c); // the player keeps only <b>, <i>, <u>
+    let out = "";
+    for (let i = 0; i <= chars.length; i++) {
+      for (const m of marks) if (m.z === i) out += m.tags.slice().reverse().map((t) => `</${t}>`).join("");
+      for (const m of marks) if (m.a === i) out += m.tags.map((t) => `<${t}>`).join("");
+      if (i < chars.length) out += esc(chars[i]);
+    }
+    return out;
+  }
+
+  async function read(file, opts = {}) {
+    const o = { onProgress: opts.onProgress || (() => {}), cancelled: opts.cancelled || (() => false) };
+    try {
+      return (await readMatroska(file, o)) || (await readMp4(file, o)) || { tracks: [], unsupported: [] };
+    } catch (e) {
+      if (e === Cancelled) return null;
+      console.warn("Built-in subtitles:", e);
+      return { tracks: [], unsupported: [], error: String(e && e.message || e) };
+    }
+  }
+  return { read, langName };
+})();
+</script>
+<script>
+(() => {
+"use strict";
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("mn-" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("mn-" + k, JSON.stringify(v)); } catch {} },
+};
+const fmt = (t) => {
+  if (!isFinite(t)) t = 0;
+  t = Math.max(0, Math.floor(t));
+  const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
+};
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ICON = {
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+};
+
+/* ---------------- state ---------------- */
+const video = $("#video");
+let file = null, fileKey = "", url = null;
+let tracks = []; // { id, name, lang, cues: [{s,e,html}] }
+const prefs = Object.assign({ size: 3.4, bottom: 8, boxed: true, bg: 0.55, color: "#ffffff", color2: "#ffe39a", secondPos: "top", speed: 1 }, store.get("prefs", {}));
+let active1 = null, active2 = null, offset = 0, subsOn = true;
+let builtin = { state: "idle", pct: 0, unsupported: [] }, scanToken = null; // subtitles stored inside the film file
+
+/* ---------------- subtitles: decoding & parsing ---------------- */
+async function readText(f) {
+  const buf = await f.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // UTF-16 files with a byte-order mark
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(buf);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(buf);
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+  catch { return new TextDecoder("windows-1251").decode(buf); } // old Russian/Ukrainian .srt files
+}
+const tsec = (str) => {
+  const m = str.trim().replace(",", ".").match(/(?:(\d+):)?(\d{1,2}):(\d{1,2}(?:\.\d+)?)/);
+  if (!m) return NaN;
+  return (+m[1] || 0) * 3600 + (+m[2]) * 60 + parseFloat(m[3]);
+};
+// keep <i>, <b>, <u> and line breaks; drop everything else
+const cleanHtml = (t) => esc(t).replace(/&lt;(\/?)(i|b|u)&gt;/gi, "<$1$2>").replace(/&lt;\/?[a-z][^&]*?&gt;/gi, "").replace(/\{\\an?\d\}/g, "");
+function parseSrtVtt(text) {
+  const cues = [];
+  const blocks = text.replace(/\r/g, "").replace(/^﻿/, "").split(/\n{2,}/);
+  for (const b of blocks) {
+    const lines = b.split("\n").filter((l, i) => !(i === 0 && /^\d+$/.test(l.trim())));
+    const ti = lines.findIndex((l) => l.includes("-->"));
+    if (ti < 0) continue;
+    const [a, z] = lines[ti].split("-->");
+    const s = tsec(a), e = tsec(z.split(/\s+/).filter(Boolean)[0] || "");
+    const body = lines.slice(ti + 1).join("\n").trim();
+    if (isFinite(s) && isFinite(e) && body) cues.push({ s, e, html: cleanHtml(body) });
+  }
+  return cues;
+}
+function parseAss(text) {
+  const cues = [];
+  let fmtCols = null;
+  for (const raw of text.replace(/\r/g, "").split("\n")) {
+    const line = raw.trim();
+    if (/^Format:/i.test(line) && !fmtCols) { const cols = line.slice(7).split(",").map((x) => x.trim().toLowerCase()); if (cols.includes("text")) fmtCols = cols; continue; }
+    if (!/^Dialogue:/i.test(line)) continue;
+    const cols = fmtCols || ["layer", "start", "end", "style", "name", "marginl", "marginr", "marginv", "effect", "text"];
+    const parts = line.slice(9).split(",");
+    const rec = {};
+    cols.forEach((c, i) => { rec[c] = i === cols.length - 1 ? parts.slice(i).join(",") : (parts[i] || "").trim(); });
+    let t = (rec.text || "").replace(/\{[^}]*\}/g, "").replace(/\\N/gi, "\n").replace(/\\h/g, " ").trim();
+    const s = tsec(rec.start || ""), e = tsec(rec.end || "");
+    if (t && isFinite(s) && isFinite(e)) cues.push({ s, e, html: esc(t) });
+  }
+  return cues;
+}
+function guessLang(name, cues) {
+  const n = name.toLowerCase();
+  const tag = n.match(/[._\-\[ ](en|eng|english|ru|rus|russian|uk|ukr|ua|ukrainian|ja|jpn|de|fr|es|it|ko|zh)[._\-\] ]/);
+  const map = { en: "English", eng: "English", english: "English", ru: "Russian", rus: "Russian", russian: "Russian", uk: "Ukrainian", ukr: "Ukrainian", ua: "Ukrainian", ukrainian: "Ukrainian", ja: "Japanese", jpn: "Japanese", de: "German", fr: "French", es: "Spanish", it: "Italian", ko: "Korean", zh: "Chinese" };
+  if (tag) return map[tag[1]];
+  const sample = cues.slice(0, 80).map((c) => c.html).join(" ");
+  if (/[іїєґ]/i.test(sample)) return "Ukrainian";
+  if (/[ыэъё]/i.test(sample)) return "Russian";
+  if (/[а-я]/i.test(sample)) return "Cyrillic";
+  if (/[぀-ヿ]/.test(sample)) return "Japanese";
+  return "";
+}
+async function addSubtitleFiles(files) {
+  for (const f of files) {
+    if (!/\.(srt|vtt|ass|ssa)$/i.test(f.name)) continue;
+    if (tracks.some((t) => t.key === f.name + "|" + f.size)) { toast(`Already added: ${f.name}`); continue; }
+    try {
+      const text = await readText(f);
+      const cues = (/\.(ass|ssa)$/i.test(f.name) || /\[Events\]/i.test(text) ? parseAss(text) : parseSrtVtt(text)).sort((a, b) => a.s - b.s);
+      if (!cues.length) { toast(`No subtitles found in ${f.name}`); continue; }
+      const sig = cues.length + "|" + cues.slice(0, 5).map((c) => c.s + c.html).join("|") + "|" + cues.at(-1).s;
+      const same = tracks.find((t) => t.sig === sig);
+      if (same) { toast(`Already added: ${same.lang || same.name}`); continue; }
+      const t = { id: Math.random().toString(36).slice(2), key: f.name + "|" + f.size, sig, name: f.name, lang: guessLang(f.name, cues), cues };
+      tracks.push(t);
+      if (!active1) active1 = t.id; else if (!active2 && file) { /* keep second off until chosen */ }
+      toast(`Subtitles added: ${t.lang || f.name} (${cues.length} lines)`);
+    } catch (e) { toast("Couldn't read " + f.name); }
+  }
+  paintPicked();
+  paintCC();
+  renderSubs();
+}
+// subtitles built into the film (MKV/WebM/MP4/MOV text tracks): read from the disk in the background
+const assText = (t) => t.replace(/\{[^}]*\}/g, "").replace(/\\N/gi, "\n").replace(/\\h/g, " ").trim();
+async function scanBuiltin(f) {
+  // the previous film's built-in tracks go away; subtitle files you added stay
+  const gone = new Set(tracks.filter((t) => t.builtin).map((t) => t.id));
+  tracks = tracks.filter((t) => !t.builtin);
+  if (gone.has(active1)) active1 = null;
+  if (gone.has(active2)) active2 = null;
+  const token = (scanToken = {});
+  builtin = { state: "idle", pct: 0, unsupported: [] };
+  if (!window.MNEmbedded || !/\.(mkv|webm|mk3d|mp4|m4v|mov)$/i.test(f.name)) { paintCC(); return; }
+  builtin.state = "reading"; paintCC();
+  let lastPaint = 0;
+  const res = await window.MNEmbedded.read(f, {
+    cancelled: () => scanToken !== token,
+    onProgress: (p) => { builtin.pct = p; if (Date.now() - lastPaint > 400) { lastPaint = Date.now(); const el = $("#builtinPct"); if (el) el.textContent = Math.round(p * 100) + "%"; } },
+  });
+  if (!res || scanToken !== token) return;
+  const added = [];
+  res.tracks.forEach((bt, i) => {
+    const cues = bt.cues.map((c) => ({ s: c.s, e: c.e, html: bt.kind === "ass" ? esc(assText(c.text)) : cleanHtml(c.text.trim()) })).filter((c) => c.html);
+    if (!cues.length) return;
+    const lang = bt.lang || guessLang("", cues);
+    const extra = [bt.title, bt.forced && !/forced/i.test(bt.title || "") ? "forced" : ""].filter(Boolean).join(" · ");
+    const t = { id: "b" + i + "-" + Math.random().toString(36).slice(2, 7), builtin: true, name: "Built into the film" + (extra ? " · " + extra : ""), lang: (lang || "Subtitles") + (extra ? " (" + extra + ")" : ""), cues };
+    tracks.push(t); added.push(t);
+  });
+  builtin = { state: "done", pct: 1, unsupported: res.unsupported || [], count: added.length };
+  paintCC(); renderSubs();
+  if (added.length) toast(`Built-in subtitles: ${added.map((t) => t.lang).join(", ")}. Press C to choose.`);
+  else if (builtin.unsupported.length) toast("This film's built-in subtitles are pictures, which the player can't show. Add an .srt file instead.");
+}
+function removeTrack(t) {
+  tracks = tracks.filter((x) => x !== t);
+  if (active1 === t.id) active1 = tracks[0]?.id || null;
+  if (active2 === t.id || active2 === active1) active2 = null;
+  paintCC(); paintPicked(); lastKey1 = lastKey2 = ""; renderSubs();
+}
+function paintPicked() {
+  const box = $("#subsPicked");
+  const label = (t) => t.lang || t.name;
+  box.replaceChildren(...tracks.map((t) => {
+    const pill = Object.assign(document.createElement("span"), { className: "pill", title: t.name });
+    pill.append("💬 " + label(t));
+    // two with the same language: show the file names so you can tell them apart
+    if (t.lang && tracks.filter((x) => label(x) === label(t)).length > 1) pill.append(Object.assign(document.createElement("small"), { textContent: t.name }));
+    const x = btnEl("×", "", (e) => { e.preventDefault(); removeTrack(t); toast(`Removed: ${label(t)}`); });
+    x.setAttribute("aria-label", "Remove " + label(t)); x.title = "Remove";
+    pill.append(x);
+    return pill;
+  }));
+}
+
+/* ---------------- loading a film ---------------- */
+function loadVideo(f) {
+  if (file !== f) scanBuiltin(f);
+  if (docked) undock();
+  file = f;
+  fileKey = f.name + "|" + f.size;
+  audioChecked = false;
+  if (url) URL.revokeObjectURL(url);
+  url = URL.createObjectURL(f);
+  video.src = url;
+  video.playbackRate = prefs.speed;
+  $("#title").textContent = f.name.replace(/\.[^.]+$/, "").replace(/[._]+/g, " ");
+  document.title = "Movie night";
+  $("#start").hidden = true;
+  $("#stage").hidden = false;
+  $("#warn").hidden = true;
+  offset = store.get("offset-" + fileKey, 0);
+  paintCC();
+  showUi();
+}
+video.addEventListener("loadedmetadata", () => {
+  $("#dur").textContent = fmt(video.duration);
+  if (!video.videoWidth) warn("<b>No picture.</b> This browser can't decode this video's format (often HEVC/H.265 or old AVI). Try Safari, or convert it to MP4 (H.264) with the free app <b>HandBrake</b>, preset “Fast 1080p30”.");
+  const saved = store.get("pos-" + fileKey, 0);
+  if (saved > 30 && saved < video.duration - 60) {
+    const r = $("#resume");
+    r.innerHTML = `Continue from <b>${fmt(saved)}</b>?`;
+    const yes = btnEl("Continue", "btn primary", () => { video.currentTime = saved; r.hidden = true; });
+    const no = btnEl("Start over", "btn", () => { r.hidden = true; });
+    r.append(yes, no); r.hidden = false;
+    setTimeout(() => (r.hidden = true), 15000);
+  }
+});
+video.addEventListener("error", () => {
+  if (!file) return; // closing the film empties the player; that isn't an error
+  warn("<b>This file won't play here.</b> The browser doesn't support its format. MKV files with H.264 video usually work in Chrome; others need converting to MP4 with the free app <b>HandBrake</b> (preset “Fast 1080p30”, it keeps the subtitles too if you add them under Subtitles → Burn in).");
+});
+// no sound? (common with MKV files whose audio is AC3/DTS)
+let audioChecked = false;
+video.addEventListener("timeupdate", () => {
+  if (audioChecked || video.currentTime < 4 || video.muted) return;
+  audioChecked = true;
+  const noAudio = ("webkitAudioDecodedByteCount" in video && video.webkitAudioDecodedByteCount === 0) || (video.audioTracks && video.audioTracks.length === 0) || ("mozHasAudio" in video && !video.mozHasAudio);
+  if (noAudio) warn("<b>No sound?</b> The audio in this file is probably AC3 or DTS, which browsers can't play. Convert it with <b>HandBrake</b> (Audio tab → AAC), or with ffmpeg: <code>ffmpeg -i film.mkv -c:v copy -c:a aac film.mp4</code>");
+});
+const btnEl = (label, cls, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = label; b.addEventListener("click", fn); return b; };
+function warn(html) {
+  const w = $("#warn");
+  w.innerHTML = `<span>⚠️</span><span>${html}</span>`;
+  w.append(btnEl("×", "", () => (w.hidden = true)));
+  w.hidden = false;
+}
+
+/* ---------------- subtitles on screen ---------------- */
+const trackById = (id) => tracks.find((t) => t.id === id);
+function cuesAt(t, time) {
+  // binary search to the first cue that could be showing, then collect overlaps
+  const c = t.cues; let lo = 0, hi = c.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (c[mid].e < time) lo = mid + 1; else hi = mid; }
+  const out = [];
+  for (let i = Math.max(0, lo - 3); i < c.length && c[i].s <= time; i++) if (c[i].e >= time && c[i].s <= time) out.push(c[i]);
+  return out;
+}
+let lastKey1 = "", lastKey2 = "";
+function renderSubs() {
+  const t = video.currentTime - offset;
+  const box1 = $("#subs1"), box2 = $("#subs2");
+  const t1 = subsOn && trackById(active1), t2 = subsOn && trackById(active2);
+  const c1 = t1 ? cuesAt(t1, t) : [], c2 = t2 ? cuesAt(t2, t) : [];
+  const k1 = c1.map((c) => c.s).join(), k2 = c2.map((c) => c.s).join();
+  if (k1 !== lastKey1) { lastKey1 = k1; box1.innerHTML = c1.map((c) => `<span class="cue">${c.html}</span>`).join(""); }
+  if (k2 !== lastKey2) { lastKey2 = k2; box2.innerHTML = c2.map((c) => `<span class="cue">${c.html}</span>`).join(""); }
+  $("#subStack").classList.toggle("two", prefs.secondPos === "below" && !!t2);
+}
+function applyPrefs() {
+  const r = document.documentElement.style;
+  r.setProperty("--sub-size", prefs.size + "cqh");
+  r.setProperty("--sub-bottom", prefs.bottom + "%");
+  r.setProperty("--sub-bg", prefs.bg);
+  r.setProperty("--sub-color", prefs.color);
+  r.setProperty("--sub-color2", prefs.color2);
+  $("#subs1").classList.toggle("boxed", prefs.boxed);
+  $("#subs2").classList.toggle("boxed", prefs.boxed);
+  // second language: inside the bottom block (above the main line) or on its own at the top
+  const s2 = $("#subs2"), stack = $("#subStack");
+  if (prefs.secondPos === "below") { if (s2.parentNode !== stack) stack.prepend(s2); s2.classList.remove("at-top"); }
+  else { if (s2.parentNode === stack) stack.after(s2); s2.classList.add("at-top"); }
+  store.set("prefs", prefs);
+  lastKey1 = lastKey2 = "";
+  renderSubs();
+}
+function setOffset(v) {
+  offset = Math.round(v * 10) / 10;
+  store.set("offset-" + fileKey, offset);
+  toast(`Subtitles ${offset === 0 ? "in sync" : (offset > 0 ? "later" : "earlier") + " by " + Math.abs(offset).toFixed(1) + " s"}`);
+  const o = $("#offVal"); if (o) o.textContent = (offset > 0 ? "+" : "") + offset.toFixed(1) + " s";
+  lastKey1 = lastKey2 = ""; renderSubs();
+}
+
+/* ---------------- panels ---------------- */
+function paintCC() {
+  const p = $("#ccPanel");
+  const sel = (id, current, none) => {
+    const s = document.createElement("select");
+    s.innerHTML = `<option value="">${none}</option>` + tracks.map((t) => `<option value="${t.id}" ${t.id === current ? "selected" : ""}>${esc(t.lang || t.name)}</option>`).join("");
+    return s;
+  };
+  p.innerHTML = "";
+  const h4 = (t) => Object.assign(document.createElement("h4"), { textContent: t });
+  p.append(h4("Subtitles"));
+  if (builtin.state === "reading") { const r = document.createElement("p"); r.className = "small"; r.innerHTML = `Looking for subtitles built into the film… <span id="builtinPct">${Math.round(builtin.pct * 100)}%</span>`; p.append(r); }
+  if (builtin.state === "done" && builtin.unsupported.length) p.append(Object.assign(document.createElement("p"), { className: "small", textContent: `${builtin.unsupported.length === 1 ? "One built-in track is" : builtin.unsupported.length + " built-in tracks are"} pictures (${[...new Set(builtin.unsupported.map((u) => u.lang || "unknown language"))].join(", ")}), which can't be shown here.` }));
+  if (!tracks.length && builtin.state !== "reading") p.append(Object.assign(document.createElement("p"), { className: "small", textContent: "No subtitles yet. Add an .srt, .vtt or .ass file (or drop it onto the film)." }));
+  for (const t of tracks) {
+    const row = document.createElement("div"); row.className = "trk"; row.title = t.name;
+    row.innerHTML = `<span class="nm">${esc(t.lang || "Subtitles")}<small>${esc(t.name)} · ${t.cues.length} lines</small></span>`;
+    row.append(btnEl("×", "chipbtn", () => removeTrack(t)));
+    p.append(row);
+  }
+  p.append(btnEl("＋ Add subtitle file…", "btn", () => $("#pickSubs").click()));
+  if (tracks.length) {
+    const l1 = document.createElement("label"); l1.textContent = "Main (bottom)";
+    const s1 = sel("s1", active1, "Off"); s1.addEventListener("change", () => { active1 = s1.value || null; lastKey1 = ""; renderSubs(); }); l1.append(s1);
+    const l2 = document.createElement("label"); l2.textContent = "Second language";
+    const s2 = sel("s2", active2, "None"); s2.addEventListener("change", () => { active2 = s2.value || null; lastKey2 = ""; renderSubs(); }); l2.append(s2);
+    p.append(l1, l2);
+    const pos = document.createElement("label"); pos.textContent = "Second one goes";
+    const seg = document.createElement("span"); seg.className = "seg";
+    for (const [k, lab] of [["top", "On top"], ["below", "Above main"]]) seg.append(Object.assign(btnEl(lab, prefs.secondPos === k ? "on" : "", () => { prefs.secondPos = k; applyPrefs(); paintCC(); })));
+    pos.append(seg); p.append(pos);
+  }
+  p.append(h4("Timing"));
+  const off = document.createElement("label"); off.textContent = "Shift";
+  const o = document.createElement("span"); o.className = "offset";
+  o.append(btnEl("−1", "", () => setOffset(offset - 1)), btnEl("−.1", "", () => setOffset(offset - 0.1)), Object.assign(document.createElement("span"), { id: "offVal", textContent: (offset > 0 ? "+" : "") + offset.toFixed(1) + " s" }), btnEl("+.1", "", () => setOffset(offset + 0.1)), btnEl("+1", "", () => setOffset(offset + 1)));
+  off.append(o); p.append(off);
+  p.append(Object.assign(document.createElement("p"), { className: "small", textContent: "Subtitles too early? Press + (or H). Too late? Press − (or G). Remembered for this film." }));
+  p.append(h4("Look"));
+  const range = (label, key, min, max, step, fmtv) => {
+    const l = document.createElement("label"); l.textContent = label;
+    const r = document.createElement("input"); r.type = "range"; r.min = min; r.max = max; r.step = step; r.value = prefs[key];
+    r.addEventListener("input", () => { prefs[key] = +r.value; applyPrefs(); });
+    l.append(r); return l;
+  };
+  p.append(range("Size", "size", 2, 7, 0.1), range("Height from bottom", "bottom", 2, 30, 1));
+  const box = document.createElement("label"); box.textContent = "Dark box behind text";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = prefs.boxed; cb.addEventListener("change", () => { prefs.boxed = cb.checked; applyPrefs(); });
+  box.append(cb); p.append(box);
+  if (prefs.boxed) p.append(range("Box darkness", "bg", 0.15, 0.95, 0.05));
+  const col = document.createElement("label"); col.textContent = "Colours (main / second)";
+  const cs = document.createElement("span"); cs.className = "row";
+  for (const k of ["color", "color2"]) { const c = document.createElement("input"); c.type = "color"; c.value = prefs[k]; c.addEventListener("input", () => { prefs[k] = c.value; applyPrefs(); }); cs.append(c); }
+  col.append(cs); p.append(col);
+}
+function paintSet() {
+  const p = $("#setPanel");
+  p.innerHTML = "<h4>Speed</h4>";
+  const seg = document.createElement("span"); seg.className = "seg";
+  for (const sp of [0.75, 1, 1.25, 1.5, 2]) seg.append(btnEl(sp + "×", video.playbackRate === sp ? "on" : "", () => { video.playbackRate = sp; prefs.speed = sp; store.set("prefs", prefs); paintSet(); }));
+  p.append(seg);
+  p.append(Object.assign(document.createElement("h4"), { textContent: "This film" }));
+  const info = document.createElement("p"); info.className = "small";
+  info.textContent = file ? `${file.name} · ${(file.size / 1e9).toFixed(2)} GB · ${video.videoWidth}×${video.videoHeight}` : "";
+  p.append(info);
+  p.append(btnEl("Choose another film…", "btn", () => { $("#pickVideo").click(); }));
+}
+// a click anywhere outside an open panel (on the film or elsewhere on the page) closes it
+document.addEventListener("click", (e) => {
+  const open = ["#ccPanel", "#setPanel"].filter((x) => !$(x).hidden);
+  if (!open.length || !e.target.isConnected) return; // panel content that just re-rendered
+  if (e.target.closest(".panel, #ccBtn, #setBtn")) return;
+  for (const x of open) $(x).hidden = true;
+});
+function togglePanel(id) {
+  for (const x of ["#ccPanel", "#setPanel"]) if (x !== id) $(x).hidden = true;
+  const el = $(id); el.hidden = !el.hidden;
+  if (!el.hidden) (id === "#ccPanel" ? paintCC : paintSet)();
+}
+
+/* ---------------- controls ---------------- */
+const playBtn = $("#playBtn");
+const paintPlay = () => { playBtn.innerHTML = video.paused ? ICON.play : ICON.pause; $("#bigplay").hidden = !video.paused || !!countTimer; };
+function togglePlay() { if (video.paused) video.play().catch(() => {}); else video.pause(); }
+video.addEventListener("play", () => {
+  paintPlay();
+  // pressing play closes the subtitle and speed menus, so they don't sit over the film
+  if (!$("#ccPanel").hidden || !$("#setPanel").hidden) { $("#ccPanel").hidden = $("#setPanel").hidden = true; showUi(); }
+});
+video.addEventListener("pause", () => { paintPlay(); showUi(); if (fileKey) store.set("pos-" + fileKey, video.currentTime); });
+video.addEventListener("ended", () => store.set("pos-" + fileKey, 0));
+playBtn.addEventListener("click", togglePlay);
+$("#bigplay").addEventListener("click", togglePlay);
+video.addEventListener("click", () => { if (!$("#ccPanel").hidden || !$("#setPanel").hidden) { $("#ccPanel").hidden = $("#setPanel").hidden = true; return; } togglePlay(); });
+video.addEventListener("dblclick", toggleFs);
+const skip = (s) => { video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + s)); toast((s > 0 ? "+" : "−") + Math.abs(s) + " s"); };
+$("#back10").addEventListener("click", () => skip(-10));
+$("#fwd10").addEventListener("click", () => skip(10));
+const vol = $("#vol");
+vol.value = store.get("vol", 1); video.volume = +vol.value;
+const paintVol = () => { vol.style.setProperty("--v", (video.muted ? 0 : video.volume) * 100 + "%"); $("#muteBtn").textContent = video.muted || video.volume === 0 ? "🔇" : video.volume < 0.5 ? "🔉" : "🔊"; };
+vol.addEventListener("input", () => { video.volume = +vol.value; video.muted = false; store.set("vol", video.volume); paintVol(); });
+$("#muteBtn").addEventListener("click", () => { video.muted = !video.muted; paintVol(); });
+video.addEventListener("volumechange", () => { vol.value = video.muted ? 0 : video.volume; paintVol(); });
+$("#ccBtn").addEventListener("click", () => togglePanel("#ccPanel"));
+$("#setBtn").addEventListener("click", () => togglePanel("#setPanel"));
+$("#keysBtn").addEventListener("click", () => ($("#keys").hidden = false));
+$("#keys").addEventListener("click", () => ($("#keys").hidden = true));
+$("#fsBtn").addEventListener("click", toggleFs);
+// big player (fills the window) ⇄ small player on the main screen; the film keeps playing either way
+const stageEl = $("#stage"), stageHome = { parent: stageEl.parentNode, next: stageEl.nextSibling };
+const EXPAND = '<svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2-2h7v2H5v14h14v-7h2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M14 3h7v7h-2V6.4l-6.3 6.3-1.4-1.4L17.6 5H14z"/></svg>'; // "open bigger"
+let docked = false;
+function dock() {
+  if (!file || docked) return;
+  if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  if (shareMode) toggleShare();
+  docked = true;
+  $("#dock").append(stageEl); // moved within one task, so playback doesn't stop
+  stageEl.classList.add("docked"); document.body.classList.add("docked");
+  $("#start").hidden = false; stageEl.hidden = false;
+  $("#backBtn").innerHTML = EXPAND; $("#backBtn").title = "Bigger player"; $("#backBtn").setAttribute("aria-label", "Bigger player");
+  scrollTo({ top: 0 });
+  showUi();
+}
+function undock() {
+  if (docked) {
+    docked = false;
+    stageHome.parent.insertBefore(stageEl, stageHome.next);
+    stageEl.classList.remove("docked"); document.body.classList.remove("docked");
+    $("#backBtn").textContent = "←"; $("#backBtn").title = "Smaller player (main screen)"; $("#backBtn").setAttribute("aria-label", "Smaller player");
+  }
+  $("#start").hidden = true; stageEl.hidden = false;
+  showUi();
+}
+function closeFilm() {
+  if (file) store.set("pos-" + fileKey, video.currentTime);
+  undock();
+  video.pause(); video.removeAttribute("src"); video.load();
+  if (url) URL.revokeObjectURL(url);
+  url = null; file = null; fileKey = "";
+  scanToken = null;
+  tracks = []; active1 = active2 = null; // subtitles go with the film
+  lastKey1 = lastKey2 = ""; $("#subs1").innerHTML = $("#subs2").innerHTML = ""; $("#subStack").classList.remove("two");
+  builtin = { state: "idle", pct: 0, unsupported: [] };
+  $("#warn").hidden = true; $("#resume").hidden = true; $("#ccPanel").hidden = $("#setPanel").hidden = true;
+  stageEl.hidden = true; $("#start").hidden = false;
+  document.title = "Movie night";
+  paintPicked();
+}
+$("#backBtn").addEventListener("click", () => (docked ? undock() : dock()));
+$("#closeBtn").addEventListener("click", closeFilm);
+function toggleFs() {
+  const st = $("#stage");
+  if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else (st.requestFullscreen || st.webkitRequestFullscreen || (() => {})).call(st)?.catch?.(() => {});
+}
+// share mode: hide every control instantly and keep them hidden until the mouse moves a lot
+let shareMode = false;
+function toggleShare() {
+  if (!shareMode && docked) undock();
+  shareMode = !shareMode;
+  $("#shareBtn").classList.toggle("on", shareMode);
+  $("#stage").classList.toggle("sharing", shareMode);
+  toast(shareMode ? "Share mode: controls hide right away. Move the mouse to bring them back." : "Share mode off");
+  if (shareMode) { $("#ccPanel").hidden = $("#setPanel").hidden = true; setTimeout(hideUi, 900); } else showUi();
+}
+$("#shareBtn").addEventListener("click", toggleShare);
+
+// seek bar
+const seek = $("#seek");
+const frac = (e) => { const r = seek.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
+let seeking = false;
+seek.addEventListener("pointerdown", (e) => { seeking = true; seek.setPointerCapture(e.pointerId); video.currentTime = frac(e) * (video.duration || 0); paintTime(); });
+seek.addEventListener("pointermove", (e) => {
+  const f = frac(e); const tip = $("#tip"); tip.style.left = f * 100 + "%"; tip.textContent = fmt(f * (video.duration || 0));
+  if (seeking) { video.currentTime = f * (video.duration || 0); paintTime(); }
+});
+seek.addEventListener("pointerup", () => (seeking = false));
+seek.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") { skip(5); e.preventDefault(); } if (e.key === "ArrowLeft") { skip(-5); e.preventDefault(); } });
+function paintTime() {
+  const d = video.duration || 0, f = d ? video.currentTime / d : 0;
+  $("#fill").style.width = f * 100 + "%";
+  $("#knob").style.left = f * 100 + "%";
+  $("#cur").textContent = fmt(video.currentTime);
+  if (video.buffered.length && d) $("#buf").style.width = (video.buffered.end(video.buffered.length - 1) / d) * 100 + "%";
+}
+let lastSave = 0;
+video.addEventListener("timeupdate", () => { paintTime(); if (Date.now() - lastSave > 5000) { lastSave = Date.now(); store.set("pos-" + fileKey, video.currentTime); } });
+(function loop() { if (!$("#stage").hidden) renderSubs(); requestAnimationFrame(loop); })();
+
+// 3-2-1 countdown so you both press play together
+let countTimer = null;
+$("#countBtn").addEventListener("click", () => {
+  if (countTimer) return;
+  video.pause();
+  const c = $("#count"); let n = 3;
+  c.hidden = false; c.textContent = n; paintPlay();
+  countTimer = setInterval(() => {
+    n--;
+    if (n > 0) { c.textContent = n; return; }
+    clearInterval(countTimer); countTimer = null; c.hidden = true;
+    video.play().catch(() => {});
+  }, 1000);
+});
+
+// auto-hide controls
+let hideT = null;
+function hideUi() {
+  if (!$("#ccPanel").hidden || !$("#setPanel").hidden) return; // keep up while a settings panel is open
+  if (!video.paused || shareMode) $("#stage").classList.add("hide-ui");
+}
+function showUi() {
+  $("#stage").classList.remove("hide-ui");
+  clearTimeout(hideT);
+  hideT = setTimeout(hideUi, shareMode ? 1200 : 2600);
+}
+let lastMove = { x: 0, y: 0 };
+$("#stage").addEventListener("pointermove", (e) => {
+  // in share mode ignore tiny jitters so the controls don't flash on her screen
+  if (shareMode && Math.hypot(e.clientX - lastMove.x, e.clientY - lastMove.y) < 25) return;
+  lastMove = { x: e.clientX, y: e.clientY };
+  showUi();
+});
+for (const sel of [".bar", ".top", "#ccPanel", "#setPanel"]) {
+  // normally hovering the controls keeps them up; in share mode they still fade so she never sees them linger
+  $(sel).addEventListener("pointerenter", () => { if (shareMode && $("#ccPanel").hidden && $("#setPanel").hidden) return; clearTimeout(hideT); $("#stage").classList.remove("hide-ui"); });
+  // (fading out makes the pointer "leave" the controls; that must not bring them straight back)
+  $(sel).addEventListener("pointerleave", () => { if (!shareMode && !$("#stage").classList.contains("hide-ui")) showUi(); });
+}
+
+let toastT;
+function toast(text) { const t = $("#toast"); t.textContent = text; t.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => (t.style.opacity = 0), 1600); }
+
+// keyboard
+document.addEventListener("keydown", (e) => {
+  if ($("#stage").hidden || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName) && document.activeElement.type !== "range" && document.activeElement.type !== "checkbox") return;
+  // a focused button would also "click" on Space/Enter; shortcuts should only do their own thing
+  if (document.activeElement && document.activeElement.tagName === "BUTTON" && (e.key === " " || /^[a-z?<>=+\-]$/i.test(e.key))) document.activeElement.blur();
+  const k = e.key;
+  const map = {
+    " ": togglePlay, k: togglePlay, K: togglePlay,
+    ArrowLeft: () => skip(e.shiftKey ? -2 : -10), ArrowRight: () => skip(e.shiftKey ? 2 : 10),
+    ArrowUp: () => { video.volume = Math.min(1, video.volume + 0.1); video.muted = false; toast("Volume " + Math.round(video.volume * 100) + "%"); },
+    ArrowDown: () => { video.volume = Math.max(0, video.volume - 0.1); toast("Volume " + Math.round(video.volume * 100) + "%"); },
+    m: () => { video.muted = !video.muted; toast(video.muted ? "Muted" : "Sound on"); },
+    f: toggleFs, t: toggleShare,
+    s: () => { subsOn = !subsOn; lastKey1 = lastKey2 = ""; renderSubs(); toast(subsOn ? "Subtitles on" : "Subtitles off"); },
+    c: () => togglePanel("#ccPanel"),
+    g: () => setOffset(offset - (e.shiftKey ? 1 : 0.1)), G: () => setOffset(offset - 1),
+    h: () => setOffset(offset + (e.shiftKey ? 1 : 0.1)), H: () => setOffset(offset + 1),
+    "-": () => { prefs.size = Math.max(2, prefs.size - 0.2); applyPrefs(); toast("Subtitle size " + prefs.size.toFixed(1)); },
+    "=": () => { prefs.size = Math.min(7, prefs.size + 0.2); applyPrefs(); toast("Subtitle size " + prefs.size.toFixed(1)); },
+    "+": () => { prefs.size = Math.min(7, prefs.size + 0.2); applyPrefs(); toast("Subtitle size " + prefs.size.toFixed(1)); },
+    "<": () => { video.playbackRate = Math.max(0.5, video.playbackRate - 0.25); toast(video.playbackRate + "×"); },
+    ">": () => { video.playbackRate = Math.min(2, video.playbackRate + 0.25); toast(video.playbackRate + "×"); },
+    "?": () => ($("#keys").hidden = !$("#keys").hidden),
+    Escape: () => { $("#keys").hidden = true; $("#ccPanel").hidden = $("#setPanel").hidden = true; },
+  };
+  const fn = map[k] || map[k.toLowerCase()];
+  if (fn) { e.preventDefault(); fn(); if (!shareMode) showUi(); }
+});
+
+/* ---------------- picking & dropping files ---------------- */
+function takeFiles(list) {
+  const files = [...list];
+  const vid = files.find((f) => f.type.startsWith("video/") || /\.(mkv|mp4|m4v|mov|webm|avi|ogv)$/i.test(f.name));
+  const subs = files.filter((f) => /\.(srt|vtt|ass|ssa)$/i.test(f.name));
+  if (subs.length) addSubtitleFiles(subs);
+  if (vid) loadVideo(vid);
+  if (!vid && !subs.length) toast("That's not a video or subtitle file");
+}
+$("#pickVideo").addEventListener("change", (e) => { takeFiles(e.target.files); e.target.value = ""; });
+$("#pickSubs").addEventListener("change", (e) => { addSubtitleFiles([...e.target.files]); e.target.value = ""; });
+$("#pickSubsBtn").addEventListener("click", () => $("#pickSubs").click());
+const drop = $("#drop");
+for (const target of [document]) {
+  target.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+  target.addEventListener("dragleave", (e) => { if (!e.relatedTarget) drop.classList.remove("over"); });
+  target.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files.length) takeFiles(e.dataTransfer.files); });
+}
+
+paintPlay(); paintVol(); applyPrefs();
+{ const hub = (window.NOTEBOOK_CONFIG || {}).hubUrl; // "" = no hub yet, hide the link
+  if (hub !== "" && /github\.io$/.test(location.hostname)) { $("#hubLink").href = hub || "/"; $("#hubLink").hidden = false; } }
+// for the automated checks
+window.__mn = { builtin: () => builtin, addSubtitleFiles, tracks: () => tracks, parseSrtVtt, parseAss, readText };
+})();
+</script>
+<script type="module" src="player.js?v=30370fd5"></script>
+</body>
+</html>
