@@ -2,7 +2,7 @@
 window.HUB_CONFIG = {
   // Which apps are open. Their cards open the app; every other card leads to an "Under construction" page.
   // Names: "movie", "notebook", "call", "mediaLog". To open everything, delete this line.
-  live: ["movie"],
+  live: ["movie", "mediaLog"],
 
   // Her name on the second clock until she has signed in (after that, the name she picked is used).
   partnerName: "Kar",
