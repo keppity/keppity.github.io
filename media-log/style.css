@@ -1150,6 +1150,22 @@ html .modal { max-height: 100%; }
 }
 .cal-pop, .ns-list { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
 html .modal > .modal-actions { padding-bottom: 14px; }
+/* genres on every card */
+.card .genre-line { margin-top: 3px; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* "I've finished this before" */
+.seen-f { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.seen-check { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--ink); }
+.seen-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.seen-n { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.f .seen-n input { width: 72px; }
+.seen-n[hidden], .seen-f[hidden] { display: none; }
+.left-acts { display: flex; gap: 8px; align-items: center; }
+#copyLinkBtn { display: inline-flex; align-items: center; gap: 6px; }
+#copyLinkBtn[hidden] { display: none; }
+@media (max-width: 600px) { #copyLinkBtn { padding-left: 12px; padding-right: 12px; } }
+.acct-menu .menu-link { display: block; padding: 8px 10px; border-radius: 8px; font-weight: 500; color: var(--ink); text-decoration: none; }
+.acct-menu .menu-link:hover { background: var(--bg); }
+.tr-badge b { overflow-wrap: break-word; word-break: normal; hyphens: manual; } /* break at a slash or a space, never mid-word */
 
 
 /* Layout: header with Library / Year in review switch. Library = filters → card grid (cover + progress controls). Year = tiles → monthly stacked bars → best-of → cover wall. */
