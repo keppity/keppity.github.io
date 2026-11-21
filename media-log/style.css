@@ -1133,6 +1133,23 @@ html .type-break { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
   .to-top { bottom: max(86px, calc(env(safe-area-inset-bottom) + 86px)); right: max(20px, env(safe-area-inset-right)); padding: 0; width: 46px; height: 46px; justify-content: center; }
   .to-top span { display: none; }
 }
+/* back to Our corner, like Movie night's "All our tools" */
+.hub-link { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 600; font-size: 14px; text-decoration: none; padding: 6px 8px; border-radius: 8px; white-space: nowrap; }
+.hub-link:hover { color: var(--ink); }
+@media (max-width: 600px) {
+  .hub-link { width: 38px; height: 38px; justify-content: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); }
+  .hub-link span { display: none; }
+  .hub-link svg { width: 18px; height: 18px; }
+}
+.acct-btn #acctName { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* iPhone: windows keep clear of the notch / status bar and the home bar */
+html .overlay, html .rev-sheet { padding-top: max(16px, calc(env(safe-area-inset-top) + 10px)); padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+html .modal { max-height: 100%; }
+@media (max-width: 600px) {
+  html .overlay { padding-top: calc(env(safe-area-inset-top) + 8px); padding-bottom: max(8px, env(safe-area-inset-bottom)); padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+}
+.cal-pop, .ns-list { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
+html .modal > .modal-actions { padding-bottom: 14px; }
 
 
 /* Layout: header with Library / Year in review switch. Library = filters → card grid (cover + progress controls). Year = tiles → monthly stacked bars → best-of → cover wall. */

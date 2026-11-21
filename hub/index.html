@@ -74,8 +74,8 @@ select.inp { appearance: none; background: var(--bg) url("data:image/svg+xml,%3C
 .signin { margin-top: 18px; color: var(--muted); font-size: 14px; }
 .signin a { color: var(--accent); }
 .foot { margin-top: 30px; color: var(--faint); font-size: 13px; text-align: center; }
-.modal-back { position: fixed; inset: 0; background: rgb(5 7 12 / .62); display: grid; place-items: center; padding: 16px; z-index: 10; }
-.modal { width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 12px; }
+.modal-back { position: fixed; inset: 0; background: rgb(5 7 12 / .62); display: grid; place-items: center; padding: 16px; z-index: 10;  padding-top: max(16px, calc(env(safe-area-inset-top) + 10px)); padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+.modal { width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 12px; max-height: 100%; overflow: auto; }
 .modal h2 { margin: 0; font-size: 19px; }
 .row { display: flex; gap: 8px; }
 .inp { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 9px 11px; width: 100%; }
@@ -124,6 +124,6 @@ h1, h2, h3, .brand, .tile b { font-family: "Departure Mono", "JetBrains Mono Var
   <p class="signin" id="signin" hidden></p>
   <p class="foot">Tip: add this page to your home screen, so it opens like an app.</p>
 </div>
-<script type="module" src="hub.js?v=cdecfe5f"></script>
+<script type="module" src="hub.js?v=395b39a2"></script>
 </body>
 </html>
