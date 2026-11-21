@@ -171,7 +171,7 @@ h1, h2, h3, h4, .brand, .title, .drop > b { font-family: "Departure Mono", "JetB
 <!-- start: pick a film -->
 <div class="start" id="start">
   <div class="start-card">
-    <div class="brand"><span class="logo" data-icon="movie"></span>Movie night<a href="/hub/" id="hubLink" class="hub-link" hidden>← All our tools</a><span id="accSlot"></span></div>
+    <div class="brand"><span class="logo" data-icon="movie"></span>Movie night<span id="accSlot"></span></div>
     <div id="dock"></div>
     <label class="drop" id="drop">
       <span class="big">🎬</span>
@@ -1243,11 +1243,11 @@ for (const target of [document]) {
 
 paintPlay(); paintVol(); applyPrefs();
 { const hub = (window.NOTEBOOK_CONFIG || {}).hubUrl; // "" = no hub yet, hide the link
-  if (hub !== "" && /github\.io$/.test(location.hostname)) { $("#hubLink").href = hub || "/hub/"; $("#hubLink").hidden = false; } }
+  /* the way back to the hub now lives in the profile menu */ }
 // for the automated checks
 window.__mn = { builtin: () => builtin, addSubtitleFiles, tracks: () => tracks, parseSrtVtt, parseAss, readText };
 })();
 </script>
-<script type="module" src="player.js?v=959e5c99"></script>
+<script type="module" src="player.js?v=1390c40f"></script>
 </body>
 </html>
