@@ -11,8 +11,8 @@ window.MEDIA_LOG_CONFIG = {
   },
   // Optional free keys for extra search sources (games, film backups). Leave them as they are if you have none.
   lookups: {
-    rawgKey: "optional",
-    omdbKey: "optional",
+    rawgKey: "05648ddfcdd541059735786350662495",
+    omdbKey: "cb95c43d",
     googleBooksKey: "optional",
   },
 };
