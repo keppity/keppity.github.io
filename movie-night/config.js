@@ -18,6 +18,6 @@ window.NOTEBOOK_CONFIG = {
   // false: anyone with the link can use it; signing in is optional.
   requireSignIn: true,
 
-  // The "← All our tools" link to the hub. "" hides it; put the hub's address here once the hub is online, e.g. "/".
-  hubUrl: "/",
+  // The "← All our tools" link to the hub. "" hides it; the hub is at "/hub/".
+  hubUrl: "/hub/",
 };
