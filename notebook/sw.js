@@ -1,6 +1,6 @@
 // Notebook service worker: lets it open from the home screen and load on a
 // shaky connection. Network first, so updates on GitHub show up right away.
-const CACHE = "notebook-30370fd5";
+const CACHE = "notebook-959e5c99";
 const SHELL = ["./", "index.html", "app.js", "style.css", "config.js", "manifest.webmanifest", "icons/icon-192.png", "fonts/onest-latin-wght-normal.woff2", "fonts/onest-cyrillic-wght-normal.woff2"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
