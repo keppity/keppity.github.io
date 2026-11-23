@@ -1,7 +1,7 @@
 // Media log service worker: lets the app open from the home screen and load
 // even with a shaky connection. Always tries the network first, so updates
 // you upload to GitHub show up right away; the saved copy is only a fallback.
-const CACHE = "media-log-mwte77j5";
+const CACHE = "media-log-mwtod611";
 const SHELL = ["./", "index.html", "app.js", "style.css", "config.js", "manifest.webmanifest", "icons/icon-192-rose.png", "fonts/onest-latin-wght-normal.woff2"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
