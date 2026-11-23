@@ -1397,6 +1397,30 @@ html .h-row .h-avs .av + .av { margin-left: -9px; }
   .h-text { font-size: 14.5px; }
   .h-pos { display: block; margin: 2px 0 0; }
 }
+html .h-group { display: block; gap: 0; }
+
+/* Library cards: content flows from the top (no shared rows across cards, so a sparse card has no
+   floating middle), buttons and rating stay pinned to the bottom. Cards in a row keep one height. */
+html .card { grid-row: auto; grid-template-rows: auto auto 1fr auto; row-gap: 8px; }
+html .card > .mid { align-self: start; }
+html .card > .mid:empty { display: none; }
+html .card:has(> .mid:empty) { grid-template-rows: auto auto 1fr; }
+html .card > .foot { align-self: end; }
+html .card .bar-row.placeholder { display: none; }
+
+/* Year in review list: heart / rewatch / review marks */
+.d-marks-in { display: none; }
+.d-rev { display: inline-flex; color: var(--muted); }
+.d-sub { min-width: 0; }
+@media (max-width: 560px) {
+  html .d-row > .d-marks { display: none; }
+  .d-marks-in { display: inline-flex; align-items: center; gap: 7px; margin-left: 8px; color: var(--muted); vertical-align: -3px; }
+  .d-marks-in svg { width: 14px; height: 14px; }
+  .d-marks-in .again-mark { margin: 0; font-size: 12px; }
+}
+@media (max-width: 600px) {
+  .bnav a:focus:not(:focus-visible), .bnav button:focus:not(:focus-visible) { outline: none; }
+}
 
 
 /* Layout: header with Library / Year in review switch. Library = filters → card grid (cover + progress controls). Year = tiles → monthly stacked bars → best-of → cover wall. */
