@@ -102,8 +102,9 @@
     <div class="controls">
       <div class="row" id="types" role="group" aria-label="Filter by type"></div>
       <div class="tabs" id="tabs" role="tablist" aria-label="Filter by status"></div>
-      <div class="row">
+      <div class="row lib-search">
         <input class="search" id="search" type="search" placeholder="Search titles, creators, genres, notes…" aria-label="Search">
+        <button type="button" class="btn fbtn" id="filtersBtn" aria-haspopup="dialog" aria-controls="filterPanel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters<span class="fbadge" id="filtersN" hidden></span></button>
         <select class="sort genre" id="genre" aria-label="Filter by genre or tag"><option value="">All genres &amp; tags</option></select>
         <select class="sort" id="sort" aria-label="Sort">
           <option value="started">Newest started</option>
@@ -114,7 +115,15 @@
         </select>
       </div>
     </div>
-    <div id="list" style="margin-top:16px"></div>
+    <div class="lib-lay">
+      <aside id="filterPanel" class="fpanel" aria-label="Filters"></aside>
+      <div class="lib-main">
+        <div id="activeChips" class="fchips" hidden></div>
+        <p id="libSummary" class="lib-summary"></p>
+        <div id="list"></div>
+      </div>
+    </div>
+    <div id="fShade" class="fshade" hidden></div>
   </section>
 
   <section id="yearView" hidden></section>
